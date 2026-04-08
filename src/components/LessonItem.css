@@ -39,12 +39,34 @@
   box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
 }
 
+/* Read-only status indicator (students) */
+.lesson-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border-radius: 5px;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.lesson-status-done {
+  color: var(--color-success);
+  opacity: 1;
+  filter: drop-shadow(0 0 4px rgba(34, 197, 94, 0.3));
+}
+
 .lesson-name {
   flex: 1;
   font-size: 0.875rem;
   color: var(--text-primary);
   line-height: 1.4;
   word-break: break-word;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .lesson-name-link {
@@ -53,11 +75,18 @@
   transition: color var(--transition-fast);
 }
 
+.lesson-name-btn {
+  background: none;
+  border: none;
+  text-align: left;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  padding: 0;
+}
+
 .lesson-name-link:hover {
   color: var(--text-accent);
-  text-decoration: underline;
-  text-decoration-color: rgba(245, 158, 11, 0.4);
-  text-underline-offset: 2px;
 }
 
 .lesson-completed .lesson-name {
@@ -65,6 +94,19 @@
   text-decoration: line-through;
   text-decoration-color: var(--text-muted);
 }
+
+/* File type icons */
+.lesson-type-icon {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  opacity: 0.7;
+  line-height: 1;
+}
+
+.type-video { opacity: 0.9; }
+.type-pdf { opacity: 0.9; }
+.type-image { opacity: 0.9; }
+.type-youtube, .type-vimeo { opacity: 0.9; }
 
 .lesson-link {
   display: flex;

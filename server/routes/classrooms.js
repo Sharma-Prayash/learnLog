@@ -98,7 +98,18 @@ router.get('/', async (req, res) => {
       progress: c.total_lessons > 0 ? Math.round((c.completed_lessons / c.total_lessons) * 100) : 0,
     }));
 
-    res.json({ teaching, learning: learningWithProgress });
+    // Classrooms with pending membership
+    const [pendingMemberships] = await pool.execute(`
+      SELECT c.*, m.status,
+        u.username AS owner_name
+      FROM memberships m
+      JOIN classrooms c ON m.classroom_id = c.id
+      JOIN users u ON c.owner_id = u.id
+      WHERE m.user_id = ? AND m.role = 'student' AND m.status = 'pending'
+      ORDER BY m.created_at DESC
+    `, [req.user.id]);
+
+    res.json({ teaching, learning: learningWithProgress, pending: pendingMemberships });
   } catch (err) {
     console.error('Error listing classrooms:', err);
     res.status(500).json({ error: 'Failed to list classrooms' });

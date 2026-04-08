@@ -7,6 +7,8 @@ import classroomsRouter from './routes/classrooms.js';
 import membershipsRouter from './routes/memberships.js';
 import nodesRouter from './routes/nodes.js';
 import uploadRouter from './routes/upload.js';
+import announcementsRouter from './routes/announcements.js';
+import commentsRouter from './routes/comments.js';
 
 dotenv.config();
 
@@ -24,6 +26,8 @@ app.use('/api/classrooms', classroomsRouter);
 app.use('/api/memberships', membershipsRouter);
 app.use('/api/nodes', nodesRouter);
 app.use('/api/upload', uploadRouter);
+app.use('/api/announcements', announcementsRouter);
+app.use('/api/comments', commentsRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

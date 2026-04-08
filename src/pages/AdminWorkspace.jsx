@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Loader2, Copy, Check, Users, FileText, Share2, UserCheck, UserX } from 'lucide-react'
+import { Loader2, Copy, Check, Users, FileText, Share2, UserCheck, UserX, Megaphone } from 'lucide-react'
 import ProgressBar from '../components/ProgressBar'
 import FolderUpload from '../components/FolderUpload'
 import FolderTree from '../components/FolderTree'
+import AnnouncementsPanel from '../components/AnnouncementsPanel'
 import { getClassroom, getNodes, getClassroomStudents, getClassroomPending, approveRequest, rejectRequest, updateProgress, deleteNode, renameNode, uploadFolder } from '../api'
 import './AdminWorkspace.css'
 
@@ -157,6 +158,9 @@ export default function AdminWorkspace() {
             <Share2 size={15} /> Invite
             {pending.length > 0 && <span className="tab-count tab-count-accent">{pending.length}</span>}
           </button>
+          <button className={`tab-btn ${activeTab === 'announcements' ? 'active' : ''}`} onClick={() => setActiveTab('announcements')}>
+            <Megaphone size={15} /> Announcements
+          </button>
         </div>
 
         {/* Tab Content */}
@@ -256,6 +260,11 @@ export default function AdminWorkspace() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+          {activeTab === 'announcements' && (
+            <div className="announcements-tab">
+              <AnnouncementsPanel classroomId={id} isAdmin={true} />
             </div>
           )}
         </div>

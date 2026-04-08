@@ -3,7 +3,7 @@ import { ChevronRight, Folder, FolderOpen, Trash2, Pencil, FolderPlus, X, Check 
 import LessonItem from './LessonItem'
 import './FolderTree.css'
 
-export default function FolderTree({ nodes, onToggleLesson, isAdmin = false, onDeleteNode, onRenameNode, onUploadToFolder, classroomId }) {
+export default function FolderTree({ nodes, onToggleLesson, onPreview, isAdmin = false, onDeleteNode, onRenameNode, onUploadToFolder, classroomId }) {
   const tree = buildTree(nodes)
 
   return (
@@ -18,6 +18,7 @@ export default function FolderTree({ nodes, onToggleLesson, isAdmin = false, onD
             key={node.id}
             node={node}
             onToggleLesson={onToggleLesson}
+            onPreview={onPreview}
             depth={0}
             isAdmin={isAdmin}
             onDeleteNode={onDeleteNode}
@@ -31,7 +32,7 @@ export default function FolderTree({ nodes, onToggleLesson, isAdmin = false, onD
   )
 }
 
-function TreeNode({ node, onToggleLesson, depth, isAdmin, onDeleteNode, onRenameNode, onUploadToFolder, classroomId }) {
+function TreeNode({ node, onToggleLesson, onPreview, depth, isAdmin, onDeleteNode, onRenameNode, onUploadToFolder, classroomId }) {
   const [isOpen, setIsOpen] = useState(depth < 2)
   const [isRenaming, setIsRenaming] = useState(false)
   const [newName, setNewName] = useState(node.name)
@@ -82,7 +83,7 @@ function TreeNode({ node, onToggleLesson, depth, isAdmin, onDeleteNode, onRename
   if (node.type === 'file') {
     return (
       <div style={{ paddingLeft: `${depth * 20}px` }} className="tree-file-row">
-        <LessonItem node={node} onToggle={onToggleLesson} />
+        <LessonItem node={node} onToggle={onToggleLesson} onPreview={onPreview} isAdmin={isAdmin} />
         {isAdmin && (
           <div className="tree-admin-actions file-actions">
             <button className="tree-action-btn" onClick={() => { setIsRenaming(true); setNewName(node.name) }} title="Rename">
@@ -194,6 +195,7 @@ function TreeNode({ node, onToggleLesson, depth, isAdmin, onDeleteNode, onRename
               key={child.id}
               node={child}
               onToggleLesson={onToggleLesson}
+              onPreview={onPreview}
               depth={depth + 1}
               isAdmin={isAdmin}
               onDeleteNode={onDeleteNode}

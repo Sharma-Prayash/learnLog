@@ -45,6 +45,17 @@
 
 .student-progress-bar { max-width: 520px; }
 
+/* Announcements section */
+.student-announcements {
+  margin-bottom: 28px;
+  padding: 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(12px);
+}
+
+/* Content section */
 .student-content {
   display: flex;
   flex-direction: column;
@@ -56,6 +67,35 @@
 
 .tree-container { padding: 16px; min-height: 100px; }
 .tree-container:hover { transform: none; }
+
+/* Split-panel workspace grid */
+.student-workspace-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  transition: grid-template-columns var(--transition-smooth);
+}
+
+.student-workspace-grid.has-viewer {
+  grid-template-columns: 340px 1fr;
+}
+
+.student-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* When viewer is open, constrain the sidebar tree height */
+.student-workspace-grid.has-viewer .student-sidebar .tree-container {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.student-viewer {
+  min-width: 0;
+}
 
 /* Milestone notification */
 .milestone-notification {
@@ -85,4 +125,15 @@
   .student-header h1 { font-size: 1.4rem; }
   .student-progress-bar { max-width: 100%; }
   .milestone-notification { font-size: 0.85rem; padding: 10px 18px; }
+
+  /* Stack on mobile */
+  .student-workspace-grid.has-viewer {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1024px) {
+  .student-workspace-grid.has-viewer {
+    grid-template-columns: 1fr;
+  }
 }

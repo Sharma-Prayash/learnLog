@@ -24,14 +24,15 @@
 - [x] **Student Features (Learner)**:
     - [x] "Join Classroom" modal for entering invite codes.
     - [x] Progress tracking (Individual isolated checkbox state).
-    - [ ] "Pending Approval" state screen in dashboard.
+    - [x] "Pending Approval" state screen in dashboard.
 
-## Phase 4: UI/UX & Refinement (IN PROGRESS 🏗️)
+## Phase 4: UI/UX & Refinement (COMPLETED ✅)
 - [x] **Design System**: Apply "Glassmorphism" CSS variables across all components.
 - [x] **Animations**: Add transitions for progress bars and checkboxes.
 - [x] **Content Viewer**: Hierarchical lesson tree with automatic progress.
 - [x] **Milestones**: Milestone notifications at 25%, 50%, 75%, and 100%.
-- [ ] **Advanced Features**:
-    - [ ] Real-time notifications for join requests.
-    - [ ] File previewing for PDFs/Videos within the app.
-    - [ ] Course analytics (Time spent, common drop-off points).
+- [x] **Advanced Features**:
+    - [x] Email notifications for join requests & approvals.
+    - [x] File previewing for PDFs/Videos/Images within the app.
+    - [x] Announcements board & per-lesson Q&A.
+    - [x] Immersive mode for content viewing.

@@ -46,6 +46,7 @@
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -123,4 +124,39 @@
   border-radius: var(--radius-md);
   font-size: 0.84rem;
   font-weight: 500;
+}
+
+/* ── Pending Card Variant ── */
+.classroom-card-pending {
+  cursor: default;
+  opacity: 0.75;
+  border-style: dashed;
+}
+
+.classroom-card-pending::before {
+  display: none;
+}
+
+.classroom-card-pending:hover {
+  transform: none;
+  opacity: 0.85;
+  border-color: var(--border-accent);
+}
+
+.pending-card-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+  border-radius: var(--radius-md);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-accent);
+  width: fit-content;
+}
+
+.pending-clock {
+  animation: pulse 2s ease-in-out infinite;
 }

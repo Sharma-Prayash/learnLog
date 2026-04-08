@@ -117,4 +117,38 @@ export async function uploadFolder(classroomId, files, paths, parentId = null) {
   return data;
 }
 
+// ── Announcements ──
+
+export async function getAnnouncements(classroomId) {
+  const { data } = await api.get('/announcements', { params: { classroomId } });
+  return data;
+}
+
+export async function createAnnouncement(classroomId, title, body) {
+  const { data } = await api.post('/announcements', { classroomId, title, body });
+  return data;
+}
+
+export async function deleteAnnouncement(id) {
+  const { data } = await api.delete(`/announcements/${id}`);
+  return data;
+}
+
+// ── Comments ──
+
+export async function getComments(nodeId) {
+  const { data } = await api.get('/comments', { params: { nodeId } });
+  return data;
+}
+
+export async function createComment(nodeId, body) {
+  const { data } = await api.post('/comments', { nodeId, body });
+  return data;
+}
+
+export async function deleteComment(id) {
+  const { data } = await api.delete(`/comments/${id}`);
+  return data;
+}
+
 export default api;

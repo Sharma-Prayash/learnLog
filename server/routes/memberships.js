@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import pool from '../db/connection.js';
 import { authenticate } from '../middleware/auth.js';
+import { sendJoinRequestEmail, sendApprovalEmail } from '../services/emailService.js';
 
 const router = Router();
 
@@ -52,6 +53,18 @@ router.post('/join', async (req, res) => {
           "UPDATE memberships SET status = 'pending', created_at = NOW() WHERE id = ?",
           [membership.id]
         );
+
+        // Send email notification to owner
+        try {
+          const [ownerRows] = await pool.execute('SELECT email FROM users WHERE id = ?', [classroom.owner_id]);
+          const [studentRows] = await pool.execute('SELECT username FROM users WHERE id = ?', [req.user.id]);
+          if (ownerRows.length > 0) {
+            await sendJoinRequestEmail(ownerRows[0].email, studentRows[0]?.username || 'A student', classroom.name);
+          }
+        } catch (emailErr) {
+          console.warn('Failed to send join request email:', emailErr.message);
+        }
+
         return res.json({ message: `Join request re-submitted for "${classroom.name}". Waiting for approval.` });
       }
     }
@@ -61,6 +74,17 @@ router.post('/join', async (req, res) => {
       "INSERT INTO memberships (user_id, classroom_id, role, status) VALUES (?, ?, 'student', 'pending')",
       [req.user.id, classroom.id]
     );
+
+    // Send email notification to owner
+    try {
+      const [ownerRows] = await pool.execute('SELECT email FROM users WHERE id = ?', [classroom.owner_id]);
+      const [studentRows] = await pool.execute('SELECT username FROM users WHERE id = ?', [req.user.id]);
+      if (ownerRows.length > 0) {
+        await sendJoinRequestEmail(ownerRows[0].email, studentRows[0]?.username || 'A student', classroom.name);
+      }
+    } catch (emailErr) {
+      console.warn('Failed to send join request email:', emailErr.message);
+    }
 
     res.status(201).json({
       message: `Join request submitted for "${classroom.name}". Waiting for admin approval.`,
@@ -79,7 +103,7 @@ router.put('/:id/approve', async (req, res) => {
 
     // Get the membership + classroom to verify owner
     const [memberships] = await pool.execute(`
-      SELECT m.*, c.owner_id 
+      SELECT m.*, c.owner_id, c.name AS classroom_name
       FROM memberships m 
       JOIN classrooms c ON m.classroom_id = c.id 
       WHERE m.id = ?
@@ -100,6 +124,17 @@ router.put('/:id/approve', async (req, res) => {
     }
 
     await pool.execute("UPDATE memberships SET status = 'approved' WHERE id = ?", [membershipId]);
+
+    // Send approval email to student
+    try {
+      const [studentRows] = await pool.execute('SELECT email FROM users WHERE id = ?', [membership.user_id]);
+      if (studentRows.length > 0) {
+        await sendApprovalEmail(studentRows[0].email, membership.classroom_name);
+      }
+    } catch (emailErr) {
+      console.warn('Failed to send approval email:', emailErr.message);
+    }
+
     res.json({ message: 'Student approved successfully' });
   } catch (err) {
     console.error('Error approving membership:', err);

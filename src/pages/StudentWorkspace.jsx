@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom'
 import { Loader2, Flame, Trophy, Calendar, FileText, FolderOpen } from 'lucide-react'
 import ProgressBar from '../components/ProgressBar'
 import FolderTree from '../components/FolderTree'
+import ContentViewer from '../components/ContentViewer'
+import AnnouncementsPanel from '../components/AnnouncementsPanel'
 import { getClassroom, getNodes, updateProgress } from '../api'
 import './StudentWorkspace.css'
 
@@ -12,6 +14,7 @@ export default function StudentWorkspace() {
   const [nodes, setNodes] = useState([])
   const [loading, setLoading] = useState(true)
   const [milestone, setMilestone] = useState(null)
+  const [selectedNode, setSelectedNode] = useState(null)
 
   const loadData = useCallback(async () => {
     try {
@@ -32,6 +35,8 @@ export default function StudentWorkspace() {
 
   async function handleToggle(nodeId, completed) {
     setNodes((prev) => prev.map((n) => (n.id === nodeId ? { ...n, completed } : n)))
+    // Update selected node too
+    setSelectedNode((prev) => prev?.id === nodeId ? { ...prev, completed } : prev)
 
     try {
       await updateProgress(nodeId, completed)
@@ -49,7 +54,16 @@ export default function StudentWorkspace() {
       }
     } catch (err) {
       setNodes((prev) => prev.map((n) => (n.id === nodeId ? { ...n, completed: !completed } : n)))
+      setSelectedNode((prev) => prev?.id === nodeId ? { ...prev, completed: !completed } : prev)
     }
+  }
+
+  function handlePreview(node) {
+    setSelectedNode(node)
+  }
+
+  function handleAutoComplete(nodeId) {
+    handleToggle(nodeId, true)
   }
 
   function showMilestone(pct) {
@@ -132,12 +146,34 @@ export default function StudentWorkspace() {
           </div>
         </div>
 
-        {/* Content */}
+        {/* Announcements */}
+        <section className="student-announcements animate-fade-in-up delay-1">
+          <AnnouncementsPanel classroomId={id} />
+        </section>
+
+        {/* Content — Split Layout */}
         <section className="student-content animate-fade-in-up delay-2">
-          <h2 className="section-title">Course Content</h2>
-          <p className="section-desc">Click any lesson to open it — progress is tracked automatically.</p>
-          <div className="tree-container card">
-            <FolderTree nodes={nodes} onToggleLesson={handleToggle} />
+          <div className={`student-workspace-grid ${selectedNode ? 'has-viewer' : ''}`}>
+            {/* Sidebar — Folder Tree */}
+            <div className="student-sidebar">
+              <h2 className="section-title">Course Content</h2>
+              <p className="section-desc">Click any lesson to preview it — progress is tracked automatically.</p>
+              <div className="tree-container card">
+                <FolderTree nodes={nodes} onToggleLesson={handleToggle} onPreview={handlePreview} />
+              </div>
+            </div>
+
+            {/* Main — Content Viewer */}
+            {selectedNode && (
+              <div className="student-viewer animate-fade-in">
+                <ContentViewer
+                  node={selectedNode}
+                  onClose={() => setSelectedNode(null)}
+                  onAutoComplete={handleAutoComplete}
+                  classroomId={id}
+                />
+              </div>
+            )}
           </div>
         </section>
       </div>

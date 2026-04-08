@@ -5,6 +5,7 @@ import './ClassroomCard.css'
 
 export default function ClassroomCard({ classroom, variant = 'teaching', onDelete, index = 0 }) {
   const isTeaching = variant === 'teaching'
+  const isPending = variant === 'pending'
   const linkTo = isTeaching ? `/classroom/${classroom.id}/admin` : `/classroom/${classroom.id}`
 
   function handleDelete(e) {
@@ -13,6 +14,34 @@ export default function ClassroomCard({ classroom, variant = 'teaching', onDelet
     if (window.confirm(`Delete "${classroom.name}"? This will permanently remove the classroom and all its content.`)) {
       onDelete(classroom.id)
     }
+  }
+
+  // Pending cards are not navigable
+  if (isPending) {
+    return (
+      <div
+        className={`classroom-card card classroom-card-pending animate-fade-in-up delay-${Math.min(index + 1, 6)}`}
+        id={`classroom-card-${classroom.id}`}
+      >
+        <div className="classroom-card-header">
+          <div className="classroom-card-title-row">
+            <h3 className="classroom-card-title">{classroom.name}</h3>
+          </div>
+          {classroom.description && (
+            <p className="classroom-card-desc">{classroom.description}</p>
+          )}
+        </div>
+
+        <div className="pending-card-status">
+          <Clock size={14} className="pending-clock" />
+          <span>Awaiting admin approval</span>
+        </div>
+
+        <div className="classroom-card-stats">
+          <span className="card-stat">by {classroom.owner_name}</span>
+        </div>
+      </div>
+    )
   }
 
   return (

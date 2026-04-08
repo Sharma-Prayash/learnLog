@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, KeyRound, Flame, Loader2, Target } from 'lucide-react'
+import { Plus, KeyRound, Flame, Loader2, Rocket, BookOpen, Share2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import ClassroomCard from '../components/ClassroomCard'
 import CreateClassroomModal from '../components/CreateClassroomModal'
@@ -19,6 +19,7 @@ export default function Dashboard() {
   const { user } = useAuth()
   const [teaching, setTeaching] = useState([])
   const [learning, setLearning] = useState([])
+  const [pendingClassrooms, setPendingClassrooms] = useState([])
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
   const [joinOpen, setJoinOpen] = useState(false)
@@ -32,6 +33,7 @@ export default function Dashboard() {
       const data = await getClassrooms()
       setTeaching(data.teaching || [])
       setLearning(data.learning || [])
+      setPendingClassrooms(data.pending || [])
     } catch (err) {
       console.error('Failed to load classrooms:', err)
     } finally {
@@ -72,7 +74,7 @@ export default function Dashboard() {
     )
   }
 
-  const isEmpty = teaching.length === 0 && learning.length === 0
+  const isEmpty = teaching.length === 0 && learning.length === 0 && pendingClassrooms.length === 0
 
   return (
     <main className="page" id="dashboard-page">
@@ -99,9 +101,39 @@ export default function Dashboard() {
 
         {isEmpty ? (
           <div className="empty-state animate-fade-in-up delay-2">
-            <div className="empty-icon"><Target size={48} /></div>
-            <h2>The journey starts now</h2>
-            <p>Create a classroom to teach, or join one to learn.</p>
+            {/* Premium empty state with getting-started guide */}
+            <div className="empty-hero">
+              <div className="empty-icon-ring">
+                <Rocket size={36} />
+              </div>
+              <h2>Your learning journey starts here</h2>
+              <p>Create a classroom to teach, or join one to learn. The world is yours.</p>
+            </div>
+
+            <div className="getting-started">
+              <div className="getting-started-step animate-fade-in-up delay-3">
+                <div className="step-number">1</div>
+                <div className="step-content">
+                  <h4><BookOpen size={15} /> Create a Classroom</h4>
+                  <p>Set up your first course with a name and description.</p>
+                </div>
+              </div>
+              <div className="getting-started-step animate-fade-in-up delay-4">
+                <div className="step-number">2</div>
+                <div className="step-content">
+                  <h4><Plus size={15} /> Upload Content</h4>
+                  <p>Add folders of lessons, videos, PDFs, and resources.</p>
+                </div>
+              </div>
+              <div className="getting-started-step animate-fade-in-up delay-5">
+                <div className="step-number">3</div>
+                <div className="step-content">
+                  <h4><Share2 size={15} /> Share the Invite Code</h4>
+                  <p>Give students your unique code to join and start learning.</p>
+                </div>
+              </div>
+            </div>
+
             <div className="empty-actions">
               <button className="btn btn-primary" onClick={() => setCreateOpen(true)}>
                 <Plus size={16} /> Create Classroom
@@ -125,9 +157,21 @@ export default function Dashboard() {
               </section>
             )}
 
+            {/* Pending Section */}
+            {pendingClassrooms.length > 0 && (
+              <section className="dashboard-section animate-fade-in-up delay-2" id="pending-section">
+                <h2 className="section-heading">⏳ Pending Approval</h2>
+                <div className="classroom-grid">
+                  {pendingClassrooms.map((c, i) => (
+                    <ClassroomCard key={c.id} classroom={c} variant="pending" index={i} />
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Learning Section */}
             {learning.length > 0 && (
-              <section className="dashboard-section animate-fade-in-up delay-2" id="learning-section">
+              <section className="dashboard-section animate-fade-in-up delay-3" id="learning-section">
                 <h2 className="section-heading">📖 Learning</h2>
                 <div className="classroom-grid">
                   {learning.map((c, i) => (
