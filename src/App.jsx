@@ -1,5 +1,6 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+﻿import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
 import Navbar from './components/Navbar'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -32,23 +33,35 @@ function PublicRoute({ children }) {
 function App() {
   const { isAuthenticated } = useAuth()
 
+  const protectedRoutes = (
+    <Routes>
+      <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/classroom/:id/admin" element={<ProtectedRoute><AdminWorkspace /></ProtectedRoute>} />
+      <Route path="/classroom/:id" element={<ProtectedRoute><StudentWorkspace /></ProtectedRoute>} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+
   return (
-    <>
-      {isAuthenticated && <Navbar />}
+    <ThemeProvider>
       <Routes>
-        {/* Public routes */}
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-
-        {/* Protected routes */}
-        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/classroom/:id/admin" element={<ProtectedRoute><AdminWorkspace /></ProtectedRoute>} />
-        <Route path="/classroom/:id" element={<ProtectedRoute><StudentWorkspace /></ProtectedRoute>} />
-
-        {/* Catch-all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route
+          path="/*"
+          element={
+            isAuthenticated ? (
+              <div className="app-shell">
+                <Navbar />
+                <div className="app-shell-content">{protectedRoutes}</div>
+              </div>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
       </Routes>
-    </>
+    </ThemeProvider>
   )
 }
 

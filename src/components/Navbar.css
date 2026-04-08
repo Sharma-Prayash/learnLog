@@ -1,95 +1,53 @@
-.navbar {
-  position: fixed;
-  top: 0; left: 0; right: 0;
+﻿.navbar {
+  position: fixed; top: 0; left: 0; right: 0;
   height: var(--navbar-height);
-  background: rgba(10, 10, 15, 0.85);
-  backdrop-filter: blur(20px) saturate(1.3);
+  background: var(--bg-card);
   border-bottom: 1px solid var(--border-subtle);
-  z-index: 100;
+  backdrop-filter: blur(16px);
+  z-index: 100; display: flex; align-items: center;
 }
-
-.navbar::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: var(--accent-gradient-full);
-  opacity: 0.7;
-}
-
-.navbar-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 100%;
-}
-
-.navbar-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-decoration: none;
-  color: var(--text-primary);
-}
-
-.navbar-brand:hover { opacity: 0.9; color: var(--text-primary); }
-
+.navbar-inner { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+.navbar-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
 .navbar-logo-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px; height: 36px;
+  width: 32px; height: 32px;
+  background: var(--accent-gradient);
   border-radius: var(--radius-sm);
-  background: var(--accent-gradient);
-  color: #0a0a0f;
-  box-shadow: var(--accent-glow);
+  display: flex; align-items: center; justify-content: center;
+  color: #0a0a0f; box-shadow: var(--accent-glow);
+}
+.navbar-logo-text { font-size: 1.25rem; font-weight: 800; color: var(--text-heading); letter-spacing: -0.04em; }
+
+.navbar-right { display: flex; align-items: center; gap: 20px; }
+.navbar-profile { display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: 0.85rem; }
+.navbar-profile-dot {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--bg-secondary); border: 1px solid var(--border-subtle);
+  display: flex; align-items: center; justify-content: center;
 }
 
-.navbar-brand-text { display: flex; flex-direction: column; }
-
-.navbar-logo-text {
-  font-size: 1.15rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  line-height: 1.2;
+/* App Rail (Sidebar) */
+.app-rail {
+  position: fixed; left: 0; top: var(--navbar-height); bottom: 0;
+  width: var(--app-rail-width);
+  background: var(--bg-card);
+  border-right: 1px solid var(--border-subtle);
+  backdrop-filter: blur(16px);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 24px 0; z-index: 90;
 }
-
-.navbar-tagline {
-  font-size: 0.6rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--text-muted);
-  font-weight: 500;
+.app-rail-link, .app-rail-signout {
+  width: 64px; height: 64px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; color: var(--text-muted); text-decoration: none;
+  border-radius: var(--radius-md); transition: all var(--transition-fast);
+  font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+  background: transparent; border: none; cursor: pointer;
 }
+.app-rail-link:hover, .app-rail-signout:hover { background: var(--bg-secondary); color: var(--text-primary); }
+.app-rail-link.active { background: var(--color-success-bg); color: var(--color-success); }
+.app-rail-spacer { flex: 1; }
+.app-rail-signout { color: var(--color-danger); }
 
-.navbar-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.navbar-user {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.navbar-username {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.navbar-back { animation: fadeIn 0.2s ease-out; }
-
-@media (max-width: 640px) {
-  .navbar-back span { display: none; }
-  .navbar-username span { display: none; }
+@media (max-width: 768px) {
+  .app-rail { display: none; }
 }

@@ -1,100 +1,100 @@
-import { Link } from 'react-router-dom'
-import { Trash2, Users, Clock, ChevronRight } from 'lucide-react'
+﻿import { useNavigate } from 'react-router-dom'
+import { Trash2, Users, FileText, ChevronRight, Clock, ShieldCheck, Hourglass } from 'lucide-react'
 import ProgressBar from './ProgressBar'
 import './ClassroomCard.css'
 
-export default function ClassroomCard({ classroom, variant = 'teaching', onDelete, index = 0 }) {
-  const isTeaching = variant === 'teaching'
+export default function ClassroomCard({ classroom, variant = 'learning', onDelete, index }) {
+  const navigate = useNavigate()
+  const isAdmin = variant === 'teaching'
   const isPending = variant === 'pending'
-  const linkTo = isTeaching ? `/classroom/${classroom.id}/admin` : `/classroom/${classroom.id}`
 
-  function handleDelete(e) {
-    e.preventDefault()
+  const handleClick = () => {
+    if (isPending) return
+    navigate(`/classroom/${classroom.id}${isAdmin ? '/admin' : ''}`)
+  }
+
+  const handleDelete = (e) => {
     e.stopPropagation()
-    if (window.confirm(`Delete "${classroom.name}"? This will permanently remove the classroom and all its content.`)) {
+    if (window.confirm(`Are you sure you want to delete "${classroom.name}"?`)) {
       onDelete(classroom.id)
     }
   }
 
-  // Pending cards are not navigable
-  if (isPending) {
-    return (
-      <div
-        className={`classroom-card card classroom-card-pending animate-fade-in-up delay-${Math.min(index + 1, 6)}`}
-        id={`classroom-card-${classroom.id}`}
-      >
-        <div className="classroom-card-header">
-          <div className="classroom-card-title-row">
-            <h3 className="classroom-card-title">{classroom.name}</h3>
-          </div>
-          {classroom.description && (
-            <p className="classroom-card-desc">{classroom.description}</p>
-          )}
+  return (
+    <article
+      className={`classroom-card card animate-fade-in-up delay-${(index % 6) + 1} ${isPending ? 'pending' : ''}`}
+      onClick={handleClick}
+    >
+      <div className="card-header">
+        <div className={`card-icon ${isPending ? 'icon-pending' : isAdmin ? 'icon-admin' : 'icon-student'}`}>
+          {isPending ? <Hourglass size={20} /> : isAdmin ? <ShieldCheck size={20} /> : <BookOpenIcon size={20} />}
         </div>
-
-        <div className="pending-card-status">
-          <Clock size={14} className="pending-clock" />
-          <span>Awaiting admin approval</span>
-        </div>
-
-        <div className="classroom-card-stats">
-          <span className="card-stat">by {classroom.owner_name}</span>
+        <div className="card-title-group">
+          <h3>{classroom.name}</h3>
+          <p>{classroom.description || 'No description provided.'}</p>
         </div>
       </div>
-    )
-  }
 
-  return (
-    <Link
-      to={linkTo}
-      className={`classroom-card card animate-fade-in-up delay-${Math.min(index + 1, 6)}`}
-      id={`classroom-card-${classroom.id}`}
-    >
-      <div className="classroom-card-header">
-        <div className="classroom-card-title-row">
-          <h3 className="classroom-card-title">{classroom.name}</h3>
-          {isTeaching && onDelete && (
-            <button className="btn-icon btn-delete-card" onClick={handleDelete} title="Delete classroom">
-              <Trash2 size={14} />
-            </button>
+      <div className="card-body">
+        <div className="card-stats">
+          <div className="stat-item" title="Students">
+            <Users size={14} />
+            <span>{classroom.student_count || 0}</span>
+          </div>
+          <div className="stat-item" title="Lessons">
+            <FileText size={14} />
+            <span>{classroom.total_lessons || 0}</span>
+          </div>
+          {isPending && (
+            <div className="stat-item status-badge">
+              <Clock size={14} />
+              <span>Pending Approval</span>
+            </div>
           )}
         </div>
 
-        {classroom.description && (
-          <p className="classroom-card-desc">{classroom.description}</p>
+        {!isPending && (classroom.total_lessons || 0) > 0 && (
+          <div className="card-progress">
+            <div className="progress-info">
+              <span>{classroom.progress || 0}% Complete</span>
+              <span>{classroom.completed_lessons || 0}/{classroom.total_lessons}</span>
+            </div>
+            <ProgressBar progress={classroom.progress || 0} size="xs" />
+          </div>
         )}
       </div>
 
-      {isTeaching ? (
-        <div className="classroom-card-stats">
-          <span className="card-stat">
-            <Users size={14} />
-            {classroom.student_count || 0} students
-          </span>
-          {(classroom.pending_count || 0) > 0 && (
-            <span className="card-stat pending-badge">
-              <Clock size={13} />
-              {classroom.pending_count} pending
-            </span>
-          )}
-          <span className="card-stat">
-            {classroom.total_lessons || 0} lessons
-          </span>
-        </div>
-      ) : (
-        <div className="classroom-card-progress-section">
-          <div className="card-meta-row">
-            <span className="card-stat">by {classroom.owner_name}</span>
-            <span className="card-stat">{classroom.completed_lessons || 0}/{classroom.total_lessons || 0}</span>
+      <div className="card-footer">
+        {isAdmin && onDelete && (
+          <button className="btn-icon btn-delete" onClick={handleDelete} title="Delete Classroom">
+            <Trash2 size={16} />
+          </button>
+        )}
+        {!isPending && (
+          <div className="card-action">
+            <span>{isAdmin ? 'Manage' : 'Continue'}</span>
+            <ChevronRight size={16} />
           </div>
-          <ProgressBar progress={classroom.progress || 0} size="sm" />
-        </div>
-      )}
-
-      <div className="classroom-card-action">
-        <span className="card-action-text">{isTeaching ? 'Manage' : 'Continue'}</span>
-        <ChevronRight size={14} />
+        )}
       </div>
-    </Link>
+    </article>
+  )
+}
+
+function BookOpenIcon({ size }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+    </svg>
   )
 }
