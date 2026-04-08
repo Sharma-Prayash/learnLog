@@ -9,6 +9,7 @@ import nodesRouter from './routes/nodes.js';
 import uploadRouter from './routes/upload.js';
 import announcementsRouter from './routes/announcements.js';
 import commentsRouter from './routes/comments.js';
+import doubtsRouter from './routes/doubts.js';
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.use('/api/nodes', nodesRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/announcements', announcementsRouter);
 app.use('/api/comments', commentsRouter);
+app.use('/api/doubts', doubtsRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

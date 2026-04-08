@@ -30,59 +30,72 @@ export default function Login() {
   }
 
   return (
-    <div className="auth-page" id="login-page">
-      <div className="auth-card animate-scale-in">
-        <div className="auth-header">
-          <div className="auth-logo">
-            <Flame size={28} />
+    <div className="auth-page">
+      <div className="auth-split-card animate-scale-in">
+        <div className="auth-left">
+          <div className="auth-left-content">
+            <h1>Welcome Back</h1>
+            <p className="auth-subtitle">Continue your learning journey.</p>
+            
+            <div className="auth-tabs">
+              <div className="auth-tab active">Login</div>
+              <Link to="/register" className="auth-tab">Signup</Link>
+            </div>
+
+            <div className="auth-form-container">
+              <div className="auth-form-glow"></div>
+              <form onSubmit={handleSubmit} className="auth-form">
+                {error && <div className="auth-error">{error}</div>}
+
+                <div className="form-group">
+                  <label htmlFor="login-email">Email</label>
+                  <div className="input-with-icon">
+                    <Mail size={16} className="input-icon" />
+                    <input
+                      id="login-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      required
+                      autoFocus
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="login-password">Password</label>
+                  <div className="input-with-icon">
+                    <Lock size={16} className="input-icon" />
+                    <input
+                      id="login-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button type="submit" className="btn btn-primary auth-submit" disabled={loading} id="login-submit">
+                  {loading ? <Loader2 size={16} className="spin" /> : <Flame size={16} />}
+                  {loading ? 'SIGNING IN...' : 'SIGN IN'}
+                </button>
+              </form>
+            </div>
           </div>
-          <h1>Welcome Back</h1>
-          <p>Sign in to continue your grind</p>
         </div>
-
-        <form onSubmit={handleSubmit} className="auth-form">
-          {error && <div className="auth-error">{error}</div>}
-
-          <div className="form-group">
-            <label htmlFor="login-email">Email</label>
-            <div className="input-with-icon">
-              <Mail size={16} className="input-icon" />
-              <input
-                id="login-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-                autoFocus
-              />
+        
+        <div className="auth-right">
+          <div className="auth-right-content">
+            <div className="brand-logo-container">
+              <Flame size={32} />
             </div>
+            <h2>LearnLog</h2>
+            <p>Track classroom progress, organize lessons, and keep learning focused.</p>
           </div>
-
-          <div className="form-group">
-            <label htmlFor="login-password">Password</label>
-            <div className="input-with-icon">
-              <Lock size={16} className="input-icon" />
-              <input
-                id="login-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-              />
-            </div>
-          </div>
-
-          <button type="submit" className="btn btn-primary auth-submit" disabled={loading} id="login-submit">
-            {loading ? <Loader2 size={16} className="spin" /> : <Flame size={16} />}
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-
-        <p className="auth-footer">
-          Don't have an account? <Link to="/register">Create one</Link>
-        </p>
+        </div>
       </div>
     </div>
   )

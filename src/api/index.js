@@ -63,6 +63,11 @@ export async function getClassroomPending(id) {
   return data;
 }
 
+export async function resetStudentProgress(classroomId, userId) {
+  const { data } = await api.post(`/classrooms/${classroomId}/students/${userId}/reset`);
+  return data;
+}
+
 // ── Memberships ──
 
 export async function joinClassroom(invite_code) {
@@ -148,6 +153,38 @@ export async function createComment(nodeId, body) {
 
 export async function deleteComment(id) {
   const { data } = await api.delete(`/comments/${id}`);
+  return data;
+}
+
+// ── Doubts ──
+
+export async function getDoubts(classroomId) {
+  const { data } = await api.get(`/doubts/${classroomId}`);
+  return data;
+}
+
+export async function getDoubtDetail(doubtId) {
+  const { data } = await api.get(`/doubts/single/${doubtId}`);
+  return data;
+}
+
+export async function createDoubt(classroomId, title, body) {
+  const { data } = await api.post(`/doubts/${classroomId}`, { title, body });
+  return data;
+}
+
+export async function createDoubtReply(doubtId, body) {
+  const { data } = await api.post(`/doubts/${doubtId}/reply`, { body });
+  return data;
+}
+
+export async function deleteDoubt(id) {
+  const { data } = await api.delete(`/doubts/${id}`);
+  return data;
+}
+
+export async function updateDoubtStatus(id, status) {
+  const { data } = await api.patch(`/doubts/${id}/status`, { status });
   return data;
 }
 

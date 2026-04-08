@@ -80,3 +80,27 @@ CREATE TABLE IF NOT EXISTS lesson_comments (
   FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+-- Doubts table (classroom-wide)
+CREATE TABLE IF NOT EXISTS doubts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  classroom_id INT NOT NULL,
+  user_id INT NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  body TEXT NOT NULL,
+  status ENUM('open', 'resolved') NOT NULL DEFAULT 'open',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Doubt replies table
+CREATE TABLE IF NOT EXISTS doubt_replies (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  doubt_id INT NOT NULL,
+  user_id INT NOT NULL,
+  body TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (doubt_id) REFERENCES doubts(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);

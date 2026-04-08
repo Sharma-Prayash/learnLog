@@ -5,6 +5,7 @@ import ProgressBar from '../components/ProgressBar'
 import FolderTree from '../components/FolderTree'
 import ContentViewer from '../components/ContentViewer'
 import AnnouncementsPanel from '../components/AnnouncementsPanel'
+import DoubtsPanel from '../components/DoubtsPanel'
 import { getClassroom, getNodes, updateProgress } from '../api'
 import './StudentWorkspace.css'
 
@@ -146,9 +147,12 @@ export default function StudentWorkspace() {
           </div>
         </div>
 
-        {/* Announcements */}
-        <section className="student-announcements animate-fade-in-up delay-1">
-          <AnnouncementsPanel classroomId={id} />
+        {/* Activity */}
+        <section className="student-activity animate-fade-in-up delay-1">
+          <div className="activity-grid">
+            <AnnouncementsPanel classroomId={id} />
+            <DoubtsPanel classroomId={id} />
+          </div>
         </section>
 
         {/* Content — Split Layout */}

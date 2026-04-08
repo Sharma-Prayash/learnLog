@@ -45,14 +45,26 @@
 
 .student-progress-bar { max-width: 520px; }
 
-/* Announcements section */
-.student-announcements {
+/* Activity section */
+.student-activity {
   margin-bottom: 28px;
   padding: 18px;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   backdrop-filter: blur(12px);
+}
+
+.activity-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .activity-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Content section */

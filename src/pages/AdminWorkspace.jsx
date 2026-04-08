@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Loader2, Copy, Check, Users, FileText, Share2, UserCheck, UserX, Megaphone } from 'lucide-react'
+import { Loader2, Copy, Check, Users, FileText, Share2, UserCheck, UserX, Megaphone, HelpCircle, RotateCcw } from 'lucide-react'
 import ProgressBar from '../components/ProgressBar'
 import FolderUpload from '../components/FolderUpload'
 import FolderTree from '../components/FolderTree'
 import AnnouncementsPanel from '../components/AnnouncementsPanel'
-import { getClassroom, getNodes, getClassroomStudents, getClassroomPending, approveRequest, rejectRequest, updateProgress, deleteNode, renameNode, uploadFolder } from '../api'
+import DoubtsPanel from '../components/DoubtsPanel'
+import { getClassroom, getNodes, getClassroomStudents, getClassroomPending, approveRequest, rejectRequest, updateProgress, deleteNode, renameNode, uploadFolder, resetStudentProgress } from '../api'
 import './AdminWorkspace.css'
 
 export default function AdminWorkspace() {
@@ -100,6 +101,16 @@ export default function AdminWorkspace() {
     }
   }
 
+  async function handleResetProgress(userId, username) {
+    if (!window.confirm(`Are you sure you want to reset all progress for ${username}? This cannot be undone.`)) return
+    try {
+      await resetStudentProgress(id, userId)
+      await loadData()
+    } catch (err) {
+      console.error('Failed to reset progress:', err)
+    }
+  }
+
   function copyInviteCode() {
     navigator.clipboard.writeText(classroom.invite_code)
     setCopied(true)
@@ -161,6 +172,9 @@ export default function AdminWorkspace() {
           <button className={`tab-btn ${activeTab === 'announcements' ? 'active' : ''}`} onClick={() => setActiveTab('announcements')}>
             <Megaphone size={15} /> Announcements
           </button>
+          <button className={`tab-btn ${activeTab === 'doubts' ? 'active' : ''}`} onClick={() => setActiveTab('doubts')}>
+            <HelpCircle size={15} /> Doubts
+          </button>
         </div>
 
         {/* Tab Content */}
@@ -202,6 +216,7 @@ export default function AdminWorkspace() {
                         <th>Email</th>
                         <th>Progress</th>
                         <th>Completed</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -211,6 +226,15 @@ export default function AdminWorkspace() {
                           <td className="student-email">{s.email}</td>
                           <td className="student-progress"><ProgressBar progress={s.progress} size="sm" showLabel={false} /></td>
                           <td className="student-pct">{s.progress}%</td>
+                          <td>
+                            <button 
+                              className="btn btn-icon btn-danger-soft" 
+                              onClick={() => handleResetProgress(s.id, s.username)}
+                              title="Reset Progress"
+                            >
+                              <RotateCcw size={14} />
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -265,6 +289,11 @@ export default function AdminWorkspace() {
           {activeTab === 'announcements' && (
             <div className="announcements-tab">
               <AnnouncementsPanel classroomId={id} isAdmin={true} />
+            </div>
+          )}
+          {activeTab === 'doubts' && (
+            <div className="doubts-tab">
+              <DoubtsPanel classroomId={id} isAdmin={true} />
             </div>
           )}
         </div>

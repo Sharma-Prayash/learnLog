@@ -253,4 +253,34 @@ router.get('/:id/pending', async (req, res) => {
   }
 });
 
+// POST /api/classrooms/:id/students/:userId/reset — reset student progress (owner only)
+router.post('/:id/students/:userId/reset', async (req, res) => {
+  try {
+    const classroomId = req.params.id;
+    const studentId = req.params.userId;
+
+    // Verify owner
+    const [classroom] = await pool.execute(
+      'SELECT owner_id FROM classrooms WHERE id = ?',
+      [classroomId]
+    );
+
+    if (classroom.length === 0) return res.status(404).json({ error: 'Classroom not found' });
+    if (classroom[0].owner_id !== req.user.id) return res.status(403).json({ error: 'Owner access required' });
+
+    // Delete all progress for this student in this classroom
+    // Since progress is linked to nodes, and nodes to classroom
+    await pool.execute(`
+      DELETE up FROM user_progress up
+      JOIN nodes n ON up.node_id = n.id
+      WHERE n.classroom_id = ? AND up.user_id = ?
+    `, [classroomId, studentId]);
+
+    res.json({ message: 'Progress reset successfully' });
+  } catch (err) {
+    console.error('Error resetting student progress:', err);
+    res.status(500).json({ error: 'Failed to reset student progress' });
+  }
+});
+
 export default router;
