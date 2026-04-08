@@ -35,8 +35,8 @@ export default function Register() {
       <div className="auth-split-card animate-scale-in">
         <div className="auth-left">
           <div className="auth-left-content">
-            <h1>Join the Grind</h1>
-            <p className="auth-subtitle">Create your account and start building.</p>
+            <h1>Create Account</h1>
+            <p className="auth-subtitle">Get started with LearnLog.</p>
 
             <div className="auth-tabs">
               <Link to="/login" className="auth-tab">Login</Link>
@@ -96,8 +96,8 @@ export default function Register() {
                 </div>
 
                 <button type="submit" className="btn btn-primary auth-submit" disabled={loading} id="register-submit">
-                  {loading ? <Loader2 size={16} className="spin" /> : <Flame size={16} />}
-                  {loading ? 'CREATING...' : 'CREATE ACCOUNT'}
+                  {loading ? <Loader2 size={16} className="spin" /> : <User size={16} />}
+                  {loading ? 'Creating...' : 'Create Account'}
                 </button>
               </form>
             </div>

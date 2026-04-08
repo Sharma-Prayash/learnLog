@@ -90,12 +90,12 @@ export default function CourseDetail() {
   const isComplete = progress === 100 && (course.total_lessons || 0) > 0
 
   function getProgressMessage() {
-    if (isComplete) return "🏆 Mission accomplished. You conquered this."
-    if (progress >= 75) return "Almost there. Don't stop now."
-    if (progress >= 50) return "Halfway through. Keep the fire burning."
-    if (progress >= 25) return "Building momentum. Stay focused."
-    if (progress > 0) return "The grind has begun. Keep pushing."
-    return "Zero excuses. Start now."
+    if (isComplete) return "Course completed successfully."
+    if (progress >= 75) return "Almost there. Just a few more lessons."
+    if (progress >= 50) return "You have completed half the course."
+    if (progress >= 25) return "Good progress. Keep going."
+    if (progress > 0) return "Course started."
+    return "Ready to begin?"
   }
 
   return (
@@ -125,7 +125,7 @@ export default function CourseDetail() {
             </span>
             <span className="meta-chip meta-chip-accent">
               <FolderOpen size={14} />
-              {course.completed_lessons || 0} conquered
+              {course.completed_lessons || 0} completed
             </span>
           </div>
 

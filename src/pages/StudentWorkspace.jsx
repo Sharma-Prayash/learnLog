@@ -69,10 +69,10 @@ export default function StudentWorkspace() {
 
   function showMilestone(pct) {
     const messages = {
-      25: "🔥 25% — Building momentum!",
-      50: "⚡ 50% — Halfway there. Keep it burning!",
-      75: "🚀 75% — Almost at the summit!",
-      100: "🏆 100% — You conquered it all!",
+      25: "25% completed — Good progress!",
+      50: "50% completed — You're halfway there.",
+      75: "75% completed — Almost finished.",
+      100: "100% completed — Course finished!",
     }
     setMilestone(messages[pct] || null)
     setTimeout(() => setMilestone(null), 4000)
@@ -102,12 +102,12 @@ export default function StudentWorkspace() {
   })
 
   function getProgressMessage() {
-    if (isComplete) return "Mission accomplished. You conquered this."
-    if (progress >= 75) return "Almost there. Don't stop now."
-    if (progress >= 50) return "Halfway through. Keep the fire burning."
-    if (progress >= 25) return "Building momentum. Stay focused."
-    if (progress > 0) return "The grind has begun. Keep pushing."
-    return "Zero excuses. Start now."
+    if (isComplete) return "Course completed successfully."
+    if (progress >= 75) return "Almost there. Just a few more lessons."
+    if (progress >= 50) return "You have completed half the course."
+    if (progress >= 25) return "Good progress. Keep going."
+    if (progress > 0) return "Course started."
+    return "Ready to begin?"
   }
 
   return (
@@ -138,7 +138,7 @@ export default function StudentWorkspace() {
             <span className="meta-chip"><Calendar size={14} /> {formattedDate}</span>
             <span className="meta-chip"><FileText size={14} /> {classroom.total_lessons || 0} lessons</span>
             <span className="meta-chip meta-chip-accent">
-              <FolderOpen size={14} /> {classroom.completed_lessons || 0} conquered
+              <FolderOpen size={14} /> {classroom.completed_lessons || 0} completed
             </span>
           </div>
 

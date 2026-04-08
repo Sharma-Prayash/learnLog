@@ -8,14 +8,6 @@ import JoinClassroomModal from '../components/JoinClassroomModal'
 import { getClassrooms, createClassroom, deleteClassroom, joinClassroom } from '../api'
 import './Dashboard.css'
 
-const QUOTES = [
-  "The grind doesn't stop. Neither do you.",
-  "Discipline is choosing between what you want now and what you want most.",
-  "Every lesson completed is a brick in your empire.",
-  "Hard work beats talent when talent doesn't work hard.",
-  "Success is built one lesson at a time.",
-]
-
 export default function Dashboard() {
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
@@ -26,8 +18,6 @@ export default function Dashboard() {
   const [createOpen, setCreateOpen] = useState(false)
   const [joinOpen, setJoinOpen] = useState(false)
   const view = searchParams.get('view') || 'all'
-
-  const quote = QUOTES[Math.floor(Date.now() / 86400000) % QUOTES.length]
 
   useEffect(() => { loadData() }, [])
 
@@ -93,10 +83,9 @@ export default function Dashboard() {
           <div className="dashboard-header animate-fade-in-up">
             <div className="dashboard-header-text">
               <h1 className="dashboard-title">
-                <Flame size={30} className="title-flame" />
-                Hey, {user?.username || 'Warrior'}
+                Welcome back, {user?.username || 'User'}
               </h1>
-              <p className="dashboard-quote">"{quote}"</p>
+              <p className="dashboard-subtitle">Manage your classrooms and courses.</p>
             </div>
 
             <div className="dashboard-actions">
@@ -168,7 +157,7 @@ export default function Dashboard() {
           <>
             {showTeaching && teaching.length > 0 && (
               <section className="dashboard-section animate-fade-in-up delay-1" id="teaching-section">
-                <h2 className="section-heading">🔥 Teaching</h2>
+                <h2 className="section-heading">Teaching</h2>
                 <div className="classroom-grid">
                   {teaching.map((c, i) => (
                     <ClassroomCard key={c.id} classroom={c} variant="teaching" onDelete={handleDelete} index={i} />
@@ -179,7 +168,7 @@ export default function Dashboard() {
 
             {showLearning && pendingClassrooms.length > 0 && (
               <section className="dashboard-section animate-fade-in-up delay-2" id="pending-section">
-                <h2 className="section-heading">⏳ Pending Approval</h2>
+                <h2 className="section-heading">Pending Approval</h2>
                 <div className="classroom-grid">
                   {pendingClassrooms.map((c, i) => (
                     <ClassroomCard key={c.id} classroom={c} variant="pending" index={i} />
@@ -190,7 +179,7 @@ export default function Dashboard() {
 
             {showLearning && learning.length > 0 && (
               <section className="dashboard-section animate-fade-in-up delay-3" id="learning-section">
-                <h2 className="section-heading">📚 Learning</h2>
+                <h2 className="section-heading">Learning</h2>
                 <div className="classroom-grid">
                   {learning.map((c, i) => (
                     <ClassroomCard key={c.id} classroom={c} variant="learning" index={i} />

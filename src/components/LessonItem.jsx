@@ -1,11 +1,20 @@
-import { ExternalLink, Check, Circle } from 'lucide-react'
-import { getContentType, isPreviewable, getFileTypeIcon } from '../utils/contentTypes'
+import { ExternalLink, Check, Circle, Video, FileText, Image as ImageIcon, Play, Link2, Paperclip } from 'lucide-react'
+import { getContentType, isPreviewable } from '../utils/contentTypes'
 import './LessonItem.css'
 
 export default function LessonItem({ node, onToggle, onPreview, isAdmin = false }) {
   const contentType = getContentType(node.resource_url)
   const canPreview = isPreviewable(node.resource_url)
-  const typeIcon = getFileTypeIcon(node.resource_url)
+  
+  const Icon = {
+    video: Video,
+    pdf: FileText,
+    image: ImageIcon,
+    youtube: Play,
+    vimeo: Play,
+    external: Link2,
+    unknown: Paperclip,
+  }[contentType] || Paperclip
 
   function handleAdminToggle() {
     if (!isAdmin) return
@@ -54,16 +63,20 @@ export default function LessonItem({ node, onToggle, onPreview, isAdmin = false 
           className={`lesson-name lesson-name-link lesson-name-btn`}
           onClick={handleClick}
         >
-          <span className={`lesson-type-icon type-${contentType}`}>{typeIcon}</span>
+          <span className={`lesson-type-icon type-${contentType}`}>
+            <Icon size={14} />
+          </span>
           {node.name}
         </button>
       ) : (
         <span className="lesson-name">
-          <span className="lesson-type-icon type-unknown">📎</span>
+          <span className="lesson-type-icon type-unknown">
+            <Paperclip size={14} />
+          </span>
           {node.name}
         </span>
       )}
-
+...
       {node.resource_url && (
         <a
           href={node.resource_url}

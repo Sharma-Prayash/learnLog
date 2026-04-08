@@ -45,20 +45,10 @@ export function isPreviewable(url) {
 }
 
 /**
- * Get the file type icon label for UI display.
+ * Get the file type label for UI display.
  */
 export function getFileTypeIcon(url) {
-  const type = getContentType(url)
-  const map = {
-    video: '🎬',
-    pdf: '📄',
-    image: '🖼️',
-    youtube: '▶️',
-    vimeo: '▶️',
-    external: '🔗',
-    unknown: '📎',
-  }
-  return map[type] || '📎'
+  return getContentType(url)
 }
 
 // ── YouTube helpers ──

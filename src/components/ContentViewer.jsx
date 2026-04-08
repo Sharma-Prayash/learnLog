@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { X, Maximize2, Minimize2, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react'
-import { getContentType, getFileTypeIcon } from '../utils/contentTypes'
+import { X, Maximize2, Minimize2, MessageSquare, ChevronDown, ChevronUp, Video, FileText, Image as ImageIcon, Play, Link2, Paperclip } from 'lucide-react'
+import { getContentType } from '../utils/contentTypes'
 import VideoPlayer from './VideoPlayer'
 import PdfViewer from './PdfViewer'
 import ImageLightbox from './ImageLightbox'
@@ -14,7 +14,16 @@ export default function ContentViewer({ node, onClose, onAutoComplete, classroom
   const [showComments, setShowComments] = useState(false)
 
   const contentType = getContentType(node?.resource_url)
-  const icon = getFileTypeIcon(node?.resource_url)
+  
+  const Icon = {
+    video: Video,
+    pdf: FileText,
+    image: ImageIcon,
+    youtube: Play,
+    vimeo: Play,
+    external: Link2,
+    unknown: Paperclip,
+  }[contentType] || Paperclip
 
   // Escape key exits immersive mode or closes viewer
   const handleKeyDown = useCallback((e) => {
@@ -95,7 +104,9 @@ export default function ContentViewer({ node, onClose, onAutoComplete, classroom
       {/* Header bar */}
       <div className="content-viewer-header">
         <div className="content-viewer-title">
-          <span className="content-viewer-icon">{icon}</span>
+          <span className="content-viewer-icon">
+            <Icon size={16} />
+          </span>
           <span className="content-viewer-name">{node.name}</span>
         </div>
         <div className="content-viewer-actions">

@@ -79,8 +79,8 @@ export default function Login() {
                 </div>
 
                 <button type="submit" className="btn btn-primary auth-submit" disabled={loading} id="login-submit">
-                  {loading ? <Loader2 size={16} className="spin" /> : <Flame size={16} />}
-                  {loading ? 'SIGNING IN...' : 'SIGN IN'}
+                  {loading ? <Loader2 size={16} className="spin" /> : <Lock size={16} />}
+                  {loading ? 'Logging in...' : 'Log In'}
                 </button>
               </form>
             </div>
