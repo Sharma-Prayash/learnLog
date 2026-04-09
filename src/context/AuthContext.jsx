@@ -1,27 +1,31 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { getMe } from '../api'
-
-const AuthContext = createContext(null)
+import { AuthContext } from './auth-context'
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [token, setToken] = useState(() => localStorage.getItem('learnlog_token'))
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => Boolean(localStorage.getItem('learnlog_token')))
 
   useEffect(() => {
-    if (token) {
-      getMe()
-        .then((userData) => setUser(userData))
-        .catch(() => {
-          // Token expired or invalid
-          localStorage.removeItem('learnlog_token')
-          setToken(null)
-          setUser(null)
-        })
-        .finally(() => setLoading(false))
-    } else {
-      setLoading(false)
-    }
+    if (!token) return
+
+    let cancelled = false
+    getMe()
+      .then((userData) => {
+        if (!cancelled) setUser(userData)
+      })
+      .catch(() => {
+        if (cancelled) return
+        localStorage.removeItem('learnlog_token')
+        setToken(null)
+        setUser(null)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => { cancelled = true }
   }, [token])
 
   function login(userData, newToken) {
@@ -41,10 +45,4 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   )
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) throw new Error('useAuth must be used within an AuthProvider')
-  return context
 }

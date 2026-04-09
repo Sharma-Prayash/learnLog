@@ -96,6 +96,21 @@
   gap: 8px;
 }
 
+.upload-policy {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.upload-error {
+  background: var(--color-danger-bg);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: var(--color-danger);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.84rem;
+}
+
 @media (max-width: 600px) {
   .upload-dropzone {
     padding: 24px 16px;

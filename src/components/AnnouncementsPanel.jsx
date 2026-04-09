@@ -13,19 +13,22 @@ export default function AnnouncementsPanel({ classroomId, isAdmin = false }) {
 
   useEffect(() => {
     if (!classroomId) return
-    loadAnnouncements()
-  }, [classroomId])
+    let cancelled = false
 
-  async function loadAnnouncements() {
-    try {
-      const data = await getAnnouncements(classroomId)
-      setAnnouncements(data)
-    } catch (err) {
-      console.error('Failed to load announcements:', err)
-    } finally {
-      setLoading(false)
+    async function loadAnnouncements() {
+      try {
+        const data = await getAnnouncements(classroomId)
+        if (!cancelled) setAnnouncements(data)
+      } catch (err) {
+        console.error('Failed to load announcements:', err)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     }
-  }
+
+    loadAnnouncements()
+    return () => { cancelled = true }
+  }, [classroomId])
 
   async function handlePost(e) {
     e.preventDefault()

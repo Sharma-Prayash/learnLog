@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { initializeDatabase } from './db/connection.js';
 import authRouter from './routes/auth.js';
 import classroomsRouter from './routes/classrooms.js';
@@ -15,11 +17,60 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173,http://localhost:5174')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+    callback(null, false);
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  skip: (req) => req.method === 'OPTIONS',
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many authentication attempts. Please try again later.' },
+});
+
+const inviteLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  skip: (req) => req.method === 'OPTIONS',
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many invite attempts. Please try again later.' },
+});
+
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  skip: (req) => req.method === 'OPTIONS',
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many upload attempts. Please try again later.' },
+});
 
 // Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.disable('x-powered-by');
+app.use(helmet());
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/memberships/join', inviteLimiter);
+app.use('/api/upload', uploadLimiter);
 
 // Routes
 app.use('/api/auth', authRouter);

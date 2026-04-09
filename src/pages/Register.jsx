@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Flame, Mail, Lock, User, Loader2 } from 'lucide-react'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 import { registerUser } from '../api'
 import './Auth.css'
+
+const PASSWORD_MIN_LENGTH = 12
 
 export default function Register() {
   const [username, setUsername] = useState('')
@@ -88,11 +90,12 @@ export default function Register() {
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Min 6 characters"
+                      placeholder={`Min ${PASSWORD_MIN_LENGTH} characters`}
                       required
-                      minLength={6}
+                      minLength={PASSWORD_MIN_LENGTH}
                     />
                   </div>
+                  <p className="auth-hint">Use at least 12 characters and avoid common passwords like 123456 or password123.</p>
                 </div>
 
                 <button type="submit" className="btn btn-primary auth-submit" disabled={loading} id="register-submit">

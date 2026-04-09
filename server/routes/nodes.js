@@ -2,6 +2,7 @@ import { Router } from 'express';
 import pool from '../db/connection.js';
 import { authenticate } from '../middleware/auth.js';
 import { getPresignedUrl, deleteFromS3 } from '../services/s3.js';
+import { writeAuditLog } from '../services/auditLog.js';
 
 const router = Router();
 
@@ -70,6 +71,15 @@ router.put('/:id/progress', async (req, res) => {
 
     const [nodeRows] = await pool.execute('SELECT classroom_id FROM nodes WHERE id = ?', [nodeId]);
     if (nodeRows.length === 0) {
+      await writeAuditLog({
+        eventType: 'node.delete',
+        actorUserId: req.user.id,
+        targetType: 'node',
+        targetId: nodeId,
+        outcome: 'failure',
+        req,
+        metadata: { reason: 'not_found' },
+      });
       return res.status(404).json({ error: 'Node not found' });
     }
 
@@ -148,6 +158,16 @@ router.delete('/:id', async (req, res) => {
     );
 
     if (classroom[0].owner_id !== req.user.id) {
+      await writeAuditLog({
+        eventType: 'node.delete',
+        actorUserId: req.user.id,
+        targetType: 'node',
+        targetId: nodeId,
+        classroomId: node.classroom_id,
+        outcome: 'denied',
+        req,
+        metadata: { reason: 'owner_required' },
+      });
       return res.status(403).json({ error: 'Only the classroom owner can delete nodes' });
     }
 
@@ -191,9 +211,28 @@ router.delete('/:id', async (req, res) => {
       }
     }
 
+    await writeAuditLog({
+      eventType: 'node.delete',
+      actorUserId: req.user.id,
+      targetType: 'node',
+      targetId: nodeId,
+      classroomId: node.classroom_id,
+      outcome: 'success',
+      req,
+      metadata: { deletedS3Files: s3KeysToDelete.length, nodeType: node.type },
+    });
     res.json({ message: 'Node deleted', deleted_s3_files: s3KeysToDelete.length });
   } catch (err) {
     console.error('Error deleting node:', err);
+    await writeAuditLog({
+      eventType: 'node.delete',
+      actorUserId: req.user?.id || null,
+      targetType: 'node',
+      targetId: req.params.id,
+      outcome: 'failure',
+      req,
+      metadata: { reason: 'server_error' },
+    });
     res.status(500).json({ error: 'Failed to delete node' });
   }
 });

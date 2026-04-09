@@ -2,20 +2,37 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import pool from '../db/connection.js';
 import { authenticate, generateToken } from '../middleware/auth.js';
+import { validatePassword } from '../security/passwordPolicy.js';
+import { writeAuditLog } from '../services/auditLog.js';
 
 const router = Router();
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const username = typeof req.body.username === 'string' ? req.body.username.trim() : '';
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const password = typeof req.body.password === 'string' ? req.body.password : '';
 
     if (!username || !email || !password) {
+      await writeAuditLog({
+        eventType: 'auth.register',
+        outcome: 'failure',
+        req,
+        metadata: { reason: 'missing_fields', email, username },
+      });
       return res.status(400).json({ error: 'Username, email, and password are required' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      await writeAuditLog({
+        eventType: 'auth.register',
+        outcome: 'failure',
+        req,
+        metadata: { reason: 'password_policy', email, username },
+      });
+      return res.status(400).json({ error: passwordValidation.error });
     }
 
     // Check if email or username already exists
@@ -25,6 +42,12 @@ router.post('/register', async (req, res) => {
     );
 
     if (existing.length > 0) {
+      await writeAuditLog({
+        eventType: 'auth.register',
+        outcome: 'failure',
+        req,
+        metadata: { reason: 'duplicate_account', email, username },
+      });
       return res.status(409).json({ error: 'Email or username already taken' });
     }
 
@@ -39,9 +62,25 @@ router.post('/register', async (req, res) => {
     const user = { id: result.insertId, username, email };
     const token = generateToken(user);
 
+    await writeAuditLog({
+      eventType: 'auth.register',
+      actorUserId: user.id,
+      targetType: 'user',
+      targetId: user.id,
+      outcome: 'success',
+      req,
+      metadata: { email },
+    });
+
     res.status(201).json({ user, token });
   } catch (err) {
     console.error('Registration error:', err);
+    await writeAuditLog({
+      eventType: 'auth.register',
+      outcome: 'failure',
+      req,
+      metadata: { reason: 'server_error' },
+    });
     res.status(500).json({ error: 'Registration failed' });
   }
 });
@@ -49,9 +88,16 @@ router.post('/register', async (req, res) => {
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const password = typeof req.body.password === 'string' ? req.body.password : '';
 
     if (!email || !password) {
+      await writeAuditLog({
+        eventType: 'auth.login',
+        outcome: 'failure',
+        req,
+        metadata: { reason: 'missing_fields', email },
+      });
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
@@ -61,6 +107,12 @@ router.post('/login', async (req, res) => {
     );
 
     if (users.length === 0) {
+      await writeAuditLog({
+        eventType: 'auth.login',
+        outcome: 'failure',
+        req,
+        metadata: { reason: 'invalid_credentials', email },
+      });
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
@@ -68,10 +120,29 @@ router.post('/login', async (req, res) => {
     const valid = await bcrypt.compare(password, user.password_hash);
 
     if (!valid) {
+      await writeAuditLog({
+        eventType: 'auth.login',
+        actorUserId: user.id,
+        targetType: 'user',
+        targetId: user.id,
+        outcome: 'failure',
+        req,
+        metadata: { reason: 'invalid_credentials', email },
+      });
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const token = generateToken({ id: user.id, username: user.username, email: user.email });
+
+    await writeAuditLog({
+      eventType: 'auth.login',
+      actorUserId: user.id,
+      targetType: 'user',
+      targetId: user.id,
+      outcome: 'success',
+      req,
+      metadata: { email },
+    });
 
     res.json({
       user: { id: user.id, username: user.username, email: user.email },
@@ -79,6 +150,12 @@ router.post('/login', async (req, res) => {
     });
   } catch (err) {
     console.error('Login error:', err);
+    await writeAuditLog({
+      eventType: 'auth.login',
+      outcome: 'failure',
+      req,
+      metadata: { reason: 'server_error' },
+    });
     res.status(500).json({ error: 'Login failed' });
   }
 });

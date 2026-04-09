@@ -1,7 +1,7 @@
-﻿import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Flame, LogOut, User, LayoutGrid, BookOpen, Sun, Moon } from 'lucide-react'
-import { useAuth } from '../context/AuthContext'
-import { useTheme } from '../context/ThemeContext'
+import { useAuth } from '../context/useAuth'
+import { useTheme } from '../context/useTheme'
 import './Navbar.css'
 
 export default function Navbar() {

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import pool from '../db/connection.js';
 import { authenticate } from '../middleware/auth.js';
+import { writeAuditLog } from '../services/auditLog.js';
 
 const router = Router();
 
@@ -91,17 +92,52 @@ router.delete('/:id', async (req, res) => {
     );
 
     if (rows.length === 0) {
+      await writeAuditLog({
+        eventType: 'announcement.delete',
+        actorUserId: req.user.id,
+        targetType: 'announcement',
+        targetId: req.params.id,
+        outcome: 'failure',
+        req,
+        metadata: { reason: 'not_found' },
+      });
       return res.status(404).json({ error: 'Announcement not found' });
     }
 
     if (rows[0].author_id !== req.user.id) {
+      await writeAuditLog({
+        eventType: 'announcement.delete',
+        actorUserId: req.user.id,
+        targetType: 'announcement',
+        targetId: req.params.id,
+        outcome: 'denied',
+        req,
+        metadata: { reason: 'author_required' },
+      });
       return res.status(403).json({ error: 'Only the author can delete this announcement' });
     }
 
     await pool.execute('DELETE FROM announcements WHERE id = ?', [req.params.id]);
+    await writeAuditLog({
+      eventType: 'announcement.delete',
+      actorUserId: req.user.id,
+      targetType: 'announcement',
+      targetId: req.params.id,
+      outcome: 'success',
+      req,
+    });
     res.json({ message: 'Announcement deleted' });
   } catch (err) {
     console.error('Error deleting announcement:', err);
+    await writeAuditLog({
+      eventType: 'announcement.delete',
+      actorUserId: req.user?.id || null,
+      targetType: 'announcement',
+      targetId: req.params.id,
+      outcome: 'failure',
+      req,
+      metadata: { reason: 'server_error' },
+    });
     res.status(500).json({ error: 'Failed to delete announcement' });
   }
 });

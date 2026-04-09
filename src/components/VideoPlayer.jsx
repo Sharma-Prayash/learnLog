@@ -2,22 +2,25 @@ import { useRef, useState, useEffect } from 'react'
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react'
 import './VideoPlayer.css'
 
-export default function VideoPlayer({ src, nodeId, nodeName, onAutoComplete, alreadyCompleted }) {
+export default function VideoPlayer({ src, nodeId, onAutoComplete, alreadyCompleted }) {
   const videoRef = useRef(null)
   const containerRef = useRef(null)
   const hasFiredRef = useRef(false)
+  const toastTimeoutRef = useRef(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [showAutoComplete, setShowAutoComplete] = useState(false)
+  const [toastNodeId, setToastNodeId] = useState(null)
 
   // Reset fired flag when nodeId changes
   useEffect(() => {
     hasFiredRef.current = false
-    setShowAutoComplete(false)
+    return () => {
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current)
+    }
   }, [nodeId])
 
   function handleTimeUpdate() {
@@ -31,9 +34,10 @@ export default function VideoPlayer({ src, nodeId, nodeName, onAutoComplete, alr
     // Auto-complete at 70% threshold
     if (pct >= 70 && !hasFiredRef.current && !alreadyCompleted) {
       hasFiredRef.current = true
-      setShowAutoComplete(true)
+      setToastNodeId(nodeId)
       onAutoComplete?.(nodeId)
-      setTimeout(() => setShowAutoComplete(false), 3000)
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current)
+      toastTimeoutRef.current = setTimeout(() => setToastNodeId(null), 3000)
     }
   }
 
@@ -99,7 +103,7 @@ export default function VideoPlayer({ src, nodeId, nodeName, onAutoComplete, alr
   return (
     <div className="video-player" ref={containerRef} id={`video-player-${nodeId}`}>
       {/* Auto-complete toast */}
-      {showAutoComplete && (
+      {toastNodeId === nodeId && (
         <div className="video-autocomplete-toast animate-scale-in">
           ✓ Auto-marked as complete (70% watched)
         </div>

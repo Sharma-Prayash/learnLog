@@ -1,15 +1,17 @@
 import { Router } from 'express';
+import { randomInt } from 'crypto';
 import pool from '../db/connection.js';
 import { authenticate } from '../middleware/auth.js';
+import { writeAuditLog } from '../services/auditLog.js';
 
 const router = Router();
 
-// Generate a random 6-char invite code
+// Generate a random invite code without ambiguous characters.
 function generateInviteCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no confusing chars (0/O, 1/I)
   let code = '';
-  for (let i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  for (let i = 0; i < 10; i++) {
+    code += chars[randomInt(chars.length)];
   }
   return code;
 }
@@ -79,7 +81,7 @@ router.get('/', async (req, res) => {
 
     // Classrooms I've enrolled in (learning — approved only)
     const [learning] = await pool.execute(`
-      SELECT c.*, m.status,
+      SELECT c.id, c.name, c.description, c.owner_id, c.created_at, m.status,
         (SELECT COUNT(*) FROM nodes WHERE classroom_id = c.id AND type = 'file') AS total_lessons,
         (SELECT COUNT(*) FROM user_progress up 
          JOIN nodes n ON up.node_id = n.id 
@@ -154,6 +156,9 @@ router.get('/:id', async (req, res) => {
       : 0;
     classroom.role = membership[0].role;
     classroom.is_owner = classroom.owner_id === req.user.id;
+    if (!classroom.is_owner) {
+      delete classroom.invite_code;
+    }
 
     res.json(classroom);
   } catch (err) {
@@ -171,17 +176,53 @@ router.delete('/:id', async (req, res) => {
     );
 
     if (classroom.length === 0) {
+      await writeAuditLog({
+        eventType: 'classroom.delete',
+        actorUserId: req.user.id,
+        targetType: 'classroom',
+        targetId: req.params.id,
+        outcome: 'failure',
+        req,
+        metadata: { reason: 'not_found' },
+      });
       return res.status(404).json({ error: 'Classroom not found' });
     }
 
     if (classroom[0].owner_id !== req.user.id) {
+      await writeAuditLog({
+        eventType: 'classroom.delete',
+        actorUserId: req.user.id,
+        targetType: 'classroom',
+        targetId: req.params.id,
+        outcome: 'denied',
+        req,
+        metadata: { reason: 'owner_required' },
+      });
       return res.status(403).json({ error: 'Only the owner can delete this classroom' });
     }
 
     await pool.execute('DELETE FROM classrooms WHERE id = ?', [req.params.id]);
+    await writeAuditLog({
+      eventType: 'classroom.delete',
+      actorUserId: req.user.id,
+      targetType: 'classroom',
+      targetId: req.params.id,
+      classroomId: Number(req.params.id),
+      outcome: 'success',
+      req,
+    });
     res.json({ message: 'Classroom deleted successfully' });
   } catch (err) {
     console.error('Error deleting classroom:', err);
+    await writeAuditLog({
+      eventType: 'classroom.delete',
+      actorUserId: req.user?.id || null,
+      targetType: 'classroom',
+      targetId: req.params.id,
+      outcome: 'failure',
+      req,
+      metadata: { reason: 'server_error' },
+    });
     res.status(500).json({ error: 'Failed to delete classroom' });
   }
 });
@@ -276,9 +317,28 @@ router.post('/:id/students/:userId/reset', async (req, res) => {
       WHERE n.classroom_id = ? AND up.user_id = ?
     `, [classroomId, studentId]);
 
+    await writeAuditLog({
+      eventType: 'progress.reset',
+      actorUserId: req.user.id,
+      targetType: 'user',
+      targetId: studentId,
+      classroomId: Number(classroomId),
+      outcome: 'success',
+      req,
+    });
     res.json({ message: 'Progress reset successfully' });
   } catch (err) {
     console.error('Error resetting student progress:', err);
+    await writeAuditLog({
+      eventType: 'progress.reset',
+      actorUserId: req.user?.id || null,
+      targetType: 'user',
+      targetId: req.params.userId,
+      classroomId: Number(req.params.id),
+      outcome: 'failure',
+      req,
+      metadata: { reason: 'server_error' },
+    });
     res.status(500).json({ error: 'Failed to reset student progress' });
   }
 });

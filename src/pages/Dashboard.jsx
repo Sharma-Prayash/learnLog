@@ -1,12 +1,20 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Plus, KeyRound, Loader2, Target, Clock3, Flame, BookOpen, Share2, Rocket } from 'lucide-react'
-import { useAuth } from '../context/AuthContext'
+import { Plus, KeyRound, Loader2, Clock3, Flame, Rocket } from 'lucide-react'
+import { useAuth } from '../context/useAuth'
 import ClassroomCard from '../components/ClassroomCard'
 import CreateClassroomModal from '../components/CreateClassroomModal'
 import JoinClassroomModal from '../components/JoinClassroomModal'
 import { getClassrooms, createClassroom, deleteClassroom, joinClassroom } from '../api'
 import './Dashboard.css'
+
+const QUOTES = [
+  "The grind doesn't stop. Neither do you.",
+  'Discipline is choosing between what you want now and what you want most.',
+  'Every lesson completed is a brick in your empire.',
+  "Hard work beats talent when talent doesn't work hard.",
+  'Success is built one lesson at a time.',
+]
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -18,6 +26,7 @@ export default function Dashboard() {
   const [createOpen, setCreateOpen] = useState(false)
   const [joinOpen, setJoinOpen] = useState(false)
   const view = searchParams.get('view') || 'all'
+  const quote = QUOTES[Math.floor(Date.now() / 86400000) % QUOTES.length]
 
   useEffect(() => { loadData() }, [])
 
@@ -83,9 +92,10 @@ export default function Dashboard() {
           <div className="dashboard-header animate-fade-in-up">
             <div className="dashboard-header-text">
               <h1 className="dashboard-title">
+                <Flame size={30} className="title-flame" />
                 Welcome back, {user?.username || 'User'}
               </h1>
-              <p className="dashboard-subtitle">Manage your classrooms and courses.</p>
+              <p className="dashboard-quote">"{quote}"</p>
             </div>
 
             <div className="dashboard-actions">
@@ -101,9 +111,7 @@ export default function Dashboard() {
 
         {showDashboardHeader && recentWatches.length > 0 && (
           <section className="dashboard-section recent-watch-section animate-fade-in-up delay-1">
-            <div className="section-heading-row">
-              <h2 className="section-heading">Recent Watches</h2>
-            </div>
+            <h2 className="section-heading">Recent Watches</h2>
             <div className="recent-watch-row">
               {recentWatches.map((item) => (
                 <article key={item.id} className="recent-watch-card card">

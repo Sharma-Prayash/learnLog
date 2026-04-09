@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import pool from '../db/connection.js';
 import { authenticate } from '../middleware/auth.js';
+import { writeAuditLog } from '../services/auditLog.js';
 
 const router = Router();
 
@@ -156,19 +157,58 @@ router.post('/:doubtId/reply', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const [doubt] = await pool.execute('SELECT user_id, classroom_id FROM doubts WHERE id = ?', [req.params.id]);
-    if (doubt.length === 0) return res.status(404).json({ error: 'Doubt not found' });
+    if (doubt.length === 0) {
+      await writeAuditLog({
+        eventType: 'doubt.delete',
+        actorUserId: req.user.id,
+        targetType: 'doubt',
+        targetId: req.params.id,
+        outcome: 'failure',
+        req,
+        metadata: { reason: 'not_found' },
+      });
+      return res.status(404).json({ error: 'Doubt not found' });
+    }
 
     const [classroom] = await pool.execute('SELECT owner_id FROM classrooms WHERE id = ?', [doubt[0].classroom_id]);
 
     // Author or classroom owner can delete
     if (doubt[0].user_id !== req.user.id && classroom[0].owner_id !== req.user.id) {
+      await writeAuditLog({
+        eventType: 'doubt.delete',
+        actorUserId: req.user.id,
+        targetType: 'doubt',
+        targetId: req.params.id,
+        classroomId: doubt[0].classroom_id,
+        outcome: 'denied',
+        req,
+        metadata: { reason: 'owner_or_author_required' },
+      });
       return res.status(403).json({ error: 'Not authorized' });
     }
 
     await pool.execute('DELETE FROM doubts WHERE id = ?', [req.params.id]);
+    await writeAuditLog({
+      eventType: 'doubt.delete',
+      actorUserId: req.user.id,
+      targetType: 'doubt',
+      targetId: req.params.id,
+      classroomId: doubt[0].classroom_id,
+      outcome: 'success',
+      req,
+    });
     res.json({ message: 'Doubt deleted' });
   } catch (err) {
     console.error('Error deleting doubt:', err);
+    await writeAuditLog({
+      eventType: 'doubt.delete',
+      actorUserId: req.user?.id || null,
+      targetType: 'doubt',
+      targetId: req.params.id,
+      outcome: 'failure',
+      req,
+      metadata: { reason: 'server_error' },
+    });
     res.status(500).json({ error: 'Failed to delete doubt' });
   }
 });

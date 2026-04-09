@@ -53,7 +53,7 @@ export default function StudentWorkspace() {
           showMilestone(hit)
         }
       }
-    } catch (err) {
+    } catch {
       setNodes((prev) => prev.map((n) => (n.id === nodeId ? { ...n, completed: !completed } : n)))
       setSelectedNode((prev) => prev?.id === nodeId ? { ...prev, completed: !completed } : prev)
     }

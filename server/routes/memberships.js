@@ -2,6 +2,7 @@ import { Router } from 'express';
 import pool from '../db/connection.js';
 import { authenticate } from '../middleware/auth.js';
 import { sendJoinRequestEmail, sendApprovalEmail } from '../services/emailService.js';
+import { writeAuditLog } from '../services/auditLog.js';
 
 const router = Router();
 
@@ -23,6 +24,13 @@ router.post('/join', async (req, res) => {
     );
 
     if (classrooms.length === 0) {
+      await writeAuditLog({
+        eventType: 'membership.join',
+        actorUserId: req.user.id,
+        outcome: 'failure',
+        req,
+        metadata: { reason: 'invalid_invite_code' },
+      });
       return res.status(404).json({ error: 'Invalid invite code. No classroom found.' });
     }
 
@@ -30,6 +38,14 @@ router.post('/join', async (req, res) => {
 
     // Can't join your own classroom as a student
     if (classroom.owner_id === req.user.id) {
+      await writeAuditLog({
+        eventType: 'membership.join',
+        actorUserId: req.user.id,
+        classroomId: classroom.id,
+        outcome: 'denied',
+        req,
+        metadata: { reason: 'owner_cannot_join_as_student' },
+      });
       return res.status(400).json({ error: 'You are the owner of this classroom' });
     }
 
@@ -65,6 +81,16 @@ router.post('/join', async (req, res) => {
           console.warn('Failed to send join request email:', emailErr.message);
         }
 
+        await writeAuditLog({
+          eventType: 'membership.join',
+          actorUserId: req.user.id,
+          targetType: 'membership',
+          targetId: membership.id,
+          classroomId: classroom.id,
+          outcome: 'success',
+          req,
+          metadata: { status: 'pending', action: 'resubmitted' },
+        });
         return res.json({ message: `Join request re-submitted for "${classroom.name}". Waiting for approval.` });
       }
     }
@@ -86,12 +112,30 @@ router.post('/join', async (req, res) => {
       console.warn('Failed to send join request email:', emailErr.message);
     }
 
+    await writeAuditLog({
+      eventType: 'membership.join',
+      actorUserId: req.user.id,
+      targetType: 'classroom',
+      targetId: classroom.id,
+      classroomId: classroom.id,
+      outcome: 'success',
+      req,
+      metadata: { status: 'pending', action: 'created' },
+    });
+
     res.status(201).json({
       message: `Join request submitted for "${classroom.name}". Waiting for admin approval.`,
       classroom_name: classroom.name,
     });
   } catch (err) {
     console.error('Error joining classroom:', err);
+    await writeAuditLog({
+      eventType: 'membership.join',
+      actorUserId: req.user?.id || null,
+      outcome: 'failure',
+      req,
+      metadata: { reason: 'server_error' },
+    });
     res.status(500).json({ error: 'Failed to join classroom' });
   }
 });
@@ -110,16 +154,45 @@ router.put('/:id/approve', async (req, res) => {
     `, [membershipId]);
 
     if (memberships.length === 0) {
+      await writeAuditLog({
+        eventType: 'membership.approve',
+        actorUserId: req.user.id,
+        targetType: 'membership',
+        targetId: membershipId,
+        outcome: 'failure',
+        req,
+        metadata: { reason: 'not_found' },
+      });
       return res.status(404).json({ error: 'Membership not found' });
     }
 
     const membership = memberships[0];
 
     if (membership.owner_id !== req.user.id) {
+      await writeAuditLog({
+        eventType: 'membership.approve',
+        actorUserId: req.user.id,
+        targetType: 'membership',
+        targetId: membershipId,
+        classroomId: membership.classroom_id,
+        outcome: 'denied',
+        req,
+        metadata: { reason: 'owner_required' },
+      });
       return res.status(403).json({ error: 'Only the classroom owner can approve requests' });
     }
 
     if (membership.status !== 'pending') {
+      await writeAuditLog({
+        eventType: 'membership.approve',
+        actorUserId: req.user.id,
+        targetType: 'membership',
+        targetId: membershipId,
+        classroomId: membership.classroom_id,
+        outcome: 'failure',
+        req,
+        metadata: { reason: 'invalid_status', status: membership.status },
+      });
       return res.status(400).json({ error: `Cannot approve – status is already "${membership.status}"` });
     }
 
@@ -135,9 +208,29 @@ router.put('/:id/approve', async (req, res) => {
       console.warn('Failed to send approval email:', emailErr.message);
     }
 
+    await writeAuditLog({
+      eventType: 'membership.approve',
+      actorUserId: req.user.id,
+      targetType: 'membership',
+      targetId: membershipId,
+      classroomId: membership.classroom_id,
+      outcome: 'success',
+      req,
+      metadata: { approvedUserId: membership.user_id },
+    });
+
     res.json({ message: 'Student approved successfully' });
   } catch (err) {
     console.error('Error approving membership:', err);
+    await writeAuditLog({
+      eventType: 'membership.approve',
+      actorUserId: req.user?.id || null,
+      targetType: 'membership',
+      targetId: req.params.id,
+      outcome: 'failure',
+      req,
+      metadata: { reason: 'server_error' },
+    });
     res.status(500).json({ error: 'Failed to approve membership' });
   }
 });
@@ -155,17 +248,55 @@ router.put('/:id/reject', async (req, res) => {
     `, [membershipId]);
 
     if (memberships.length === 0) {
+      await writeAuditLog({
+        eventType: 'membership.reject',
+        actorUserId: req.user.id,
+        targetType: 'membership',
+        targetId: membershipId,
+        outcome: 'failure',
+        req,
+        metadata: { reason: 'not_found' },
+      });
       return res.status(404).json({ error: 'Membership not found' });
     }
 
     if (memberships[0].owner_id !== req.user.id) {
+      await writeAuditLog({
+        eventType: 'membership.reject',
+        actorUserId: req.user.id,
+        targetType: 'membership',
+        targetId: membershipId,
+        classroomId: memberships[0].classroom_id,
+        outcome: 'denied',
+        req,
+        metadata: { reason: 'owner_required' },
+      });
       return res.status(403).json({ error: 'Only the classroom owner can reject requests' });
     }
 
     await pool.execute("UPDATE memberships SET status = 'rejected' WHERE id = ?", [membershipId]);
+    await writeAuditLog({
+      eventType: 'membership.reject',
+      actorUserId: req.user.id,
+      targetType: 'membership',
+      targetId: membershipId,
+      classroomId: memberships[0].classroom_id,
+      outcome: 'success',
+      req,
+      metadata: { rejectedUserId: memberships[0].user_id },
+    });
     res.json({ message: 'Student rejected' });
   } catch (err) {
     console.error('Error rejecting membership:', err);
+    await writeAuditLog({
+      eventType: 'membership.reject',
+      actorUserId: req.user?.id || null,
+      targetType: 'membership',
+      targetId: req.params.id,
+      outcome: 'failure',
+      req,
+      metadata: { reason: 'server_error' },
+    });
     res.status(500).json({ error: 'Failed to reject membership' });
   }
 });

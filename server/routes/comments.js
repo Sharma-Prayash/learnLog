@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import pool from '../db/connection.js';
 import { authenticate } from '../middleware/auth.js';
+import { writeAuditLog } from '../services/auditLog.js';
 
 const router = Router();
 
@@ -116,6 +117,15 @@ router.delete('/:id', async (req, res) => {
     );
 
     if (rows.length === 0) {
+      await writeAuditLog({
+        eventType: 'comment.delete',
+        actorUserId: req.user.id,
+        targetType: 'comment',
+        targetId: req.params.id,
+        outcome: 'failure',
+        req,
+        metadata: { reason: 'not_found' },
+      });
       return res.status(404).json({ error: 'Comment not found' });
     }
 
@@ -127,14 +137,41 @@ router.delete('/:id', async (req, res) => {
       const [classroom] = await pool.execute('SELECT owner_id FROM classrooms WHERE id = ?', [nodeRows[0].classroom_id]);
 
       if (classroom[0].owner_id !== req.user.id) {
+        await writeAuditLog({
+          eventType: 'comment.delete',
+          actorUserId: req.user.id,
+          targetType: 'comment',
+          targetId: req.params.id,
+          classroomId: nodeRows[0].classroom_id,
+          outcome: 'denied',
+          req,
+          metadata: { reason: 'owner_or_author_required' },
+        });
         return res.status(403).json({ error: 'You can only delete your own comments' });
       }
     }
 
     await pool.execute('DELETE FROM lesson_comments WHERE id = ?', [req.params.id]);
+    await writeAuditLog({
+      eventType: 'comment.delete',
+      actorUserId: req.user.id,
+      targetType: 'comment',
+      targetId: req.params.id,
+      outcome: 'success',
+      req,
+    });
     res.json({ message: 'Comment deleted' });
   } catch (err) {
     console.error('Error deleting comment:', err);
+    await writeAuditLog({
+      eventType: 'comment.delete',
+      actorUserId: req.user?.id || null,
+      targetType: 'comment',
+      targetId: req.params.id,
+      outcome: 'failure',
+      req,
+      metadata: { reason: 'server_error' },
+    });
     res.status(500).json({ error: 'Failed to delete comment' });
   }
 });

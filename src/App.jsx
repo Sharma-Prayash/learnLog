@@ -1,5 +1,5 @@
-﻿import { Routes, Route, Navigate } from 'react-router-dom'
-import { useAuth } from './context/AuthContext'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { useAuth } from './context/useAuth'
 import { ThemeProvider } from './context/ThemeContext'
 import Navbar from './components/Navbar'
 import Login from './pages/Login'

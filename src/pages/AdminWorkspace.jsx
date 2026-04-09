@@ -51,7 +51,7 @@ export default function AdminWorkspace() {
     setNodes((prev) => prev.map((n) => (n.id === nodeId ? { ...n, completed } : n)))
     try {
       await updateProgress(nodeId, completed)
-    } catch (err) {
+    } catch {
       setNodes((prev) => prev.map((n) => (n.id === nodeId ? { ...n, completed: !completed } : n)))
     }
   }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { HelpCircle, Plus, Trash2, Loader2, X, Send, MessageSquare, CheckCircle2, Circle } from 'lucide-react'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 import { getDoubts, createDoubt, deleteDoubt, updateDoubtStatus, getDoubtDetail, createDoubtReply } from '../api'
 import './DoubtsPanel.css'
 
@@ -10,7 +10,6 @@ export default function DoubtsPanel({ classroomId, isAdmin = false }) {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [selectedDoubt, setSelectedDoubt] = useState(null)
-  const [loadingDetail, setLoadingDetail] = useState(false)
   
   // New Doubt Form
   const [title, setTitle] = useState('')
@@ -23,19 +22,22 @@ export default function DoubtsPanel({ classroomId, isAdmin = false }) {
 
   useEffect(() => {
     if (!classroomId) return
-    loadDoubts()
-  }, [classroomId])
+    let cancelled = false
 
-  async function loadDoubts() {
-    try {
-      const data = await getDoubts(classroomId)
-      setDoubts(data)
-    } catch (err) {
-      console.error('Failed to load doubts:', err)
-    } finally {
-      setLoading(false)
+    async function loadDoubts() {
+      try {
+        const data = await getDoubts(classroomId)
+        if (!cancelled) setDoubts(data)
+      } catch (err) {
+        console.error('Failed to load doubts:', err)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     }
-  }
+
+    loadDoubts()
+    return () => { cancelled = true }
+  }, [classroomId])
 
   async function handlePost(e) {
     e.preventDefault()
@@ -56,14 +58,11 @@ export default function DoubtsPanel({ classroomId, isAdmin = false }) {
   }
 
   async function handleViewDoubt(id) {
-    setLoadingDetail(true)
     try {
       const detail = await getDoubtDetail(id)
       setSelectedDoubt(detail)
     } catch (err) {
       console.error('Failed to load doubt detail:', err)
-    } finally {
-      setLoadingDetail(false)
     }
   }
 

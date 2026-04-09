@@ -172,6 +172,12 @@
   font-weight: 500;
 }
 
+.auth-hint {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
 /* Right Side */
 .auth-right {
   flex: 1;

@@ -3,7 +3,7 @@ import { Send, Trash2, MessageCircle, Loader2 } from 'lucide-react'
 import { getComments, createComment, deleteComment } from '../api'
 import './CommentsSection.css'
 
-export default function CommentsSection({ nodeId, classroomId }) {
+export default function CommentsSection({ nodeId }) {
   const [comments, setComments] = useState([])
   const [body, setBody] = useState('')
   const [loading, setLoading] = useState(true)

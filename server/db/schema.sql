@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS classrooms (
   name VARCHAR(255) NOT NULL,
   description TEXT DEFAULT NULL,
   owner_id INT NOT NULL,
-  invite_code VARCHAR(8) NOT NULL UNIQUE,
+  invite_code VARCHAR(12) NOT NULL UNIQUE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -103,4 +103,23 @@ CREATE TABLE IF NOT EXISTS doubt_replies (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (doubt_id) REFERENCES doubts(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Audit logs table
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  event_type VARCHAR(100) NOT NULL,
+  actor_user_id INT DEFAULT NULL,
+  target_type VARCHAR(64) DEFAULT NULL,
+  target_id VARCHAR(191) DEFAULT NULL,
+  classroom_id INT DEFAULT NULL,
+  outcome VARCHAR(32) NOT NULL DEFAULT 'success',
+  ip_address VARCHAR(64) DEFAULT NULL,
+  user_agent VARCHAR(255) DEFAULT NULL,
+  metadata JSON DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_audit_logs_event_type (event_type),
+  INDEX idx_audit_logs_actor_user_id (actor_user_id),
+  INDEX idx_audit_logs_classroom_id (classroom_id),
+  INDEX idx_audit_logs_created_at (created_at)
 );

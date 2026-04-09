@@ -2,16 +2,20 @@ import { useState, useRef } from 'react'
 import { Upload, FolderUp, Loader2 } from 'lucide-react'
 import './FolderUpload.css'
 
+const ACCEPTED_UPLOADS = '.pdf,.png,.jpg,.jpeg,.gif,.webp,.bmp,.mp4,.webm,.ogg,.mov,.txt,.md,.csv,.doc,.docx,.ppt,.pptx,.xls,.xlsx'
+
 export default function FolderUpload({ classroomId, onUploadComplete }) {
   const [files, setFiles] = useState([])
   const [paths, setPaths] = useState([])
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
+  const [error, setError] = useState('')
   const inputRef = useRef(null)
 
   function handleFolderSelect(e) {
     const selectedFiles = Array.from(e.target.files)
     if (selectedFiles.length === 0) return
+    setError('')
 
     const fileList = []
     const pathList = []
@@ -32,6 +36,7 @@ export default function FolderUpload({ classroomId, onUploadComplete }) {
     if (files.length === 0) return
 
     setUploading(true)
+    setError('')
     try {
       const { uploadFolder } = await import('../api/index.js')
       await uploadFolder(classroomId, files, paths)
@@ -41,7 +46,7 @@ export default function FolderUpload({ classroomId, onUploadComplete }) {
       onUploadComplete()
     } catch (err) {
       console.error('Upload failed:', err)
-      alert('Upload failed. Please check the console for details.')
+      setError(err.response?.data?.error || 'Upload failed. Please check the selected file types and try again.')
     } finally {
       setUploading(false)
     }
@@ -50,6 +55,7 @@ export default function FolderUpload({ classroomId, onUploadComplete }) {
   function handleClear() {
     setFiles([])
     setPaths([])
+    setError('')
     if (inputRef.current) inputRef.current.value = ''
   }
 
@@ -70,6 +76,7 @@ export default function FolderUpload({ classroomId, onUploadComplete }) {
         <input
           ref={inputRef}
           type="file"
+          accept={ACCEPTED_UPLOADS}
           webkitdirectory=""
           multiple
           onChange={handleFolderSelect}
@@ -100,6 +107,12 @@ export default function FolderUpload({ classroomId, onUploadComplete }) {
           </div>
         )}
       </div>
+
+      <p className="upload-policy">
+        Allowed file types: PDF, images, videos, text, CSV, and Office documents. HTML, SVG, executables, and other unsafe formats are blocked.
+      </p>
+
+      {error && <div className="upload-error">{error}</div>}
 
       {files.length > 0 && (
         <div className="upload-actions animate-fade-in">
