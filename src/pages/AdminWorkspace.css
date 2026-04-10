@@ -104,6 +104,34 @@
 .tree-container { padding: 16px; min-height: 100px; }
 .tree-container:hover { transform: none; }
 
+/* Split-panel workspace grid */
+.admin-workspace-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  transition: grid-template-columns var(--transition-smooth);
+}
+
+.admin-workspace-grid.has-viewer {
+  grid-template-columns: 340px 1fr;
+}
+
+.admin-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.admin-workspace-grid.has-viewer .admin-sidebar .tree-container {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.admin-viewer {
+  min-width: 0;
+}
+
 /* Gradebook */
 .gradebook { overflow-x: auto; }
 .gradebook-table {
@@ -189,4 +217,10 @@
   .invite-code { font-size: 1.4rem; }
   .pending-card { flex-direction: column; align-items: flex-start; }
   .gradebook-table { font-size: 0.78rem; }
+}
+
+@media (max-width: 1024px) {
+  .admin-workspace-grid.has-viewer {
+    grid-template-columns: 1fr;
+  }
 }

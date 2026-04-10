@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Loader2, Copy, Check, Users, FileText, Share2, UserCheck, UserX, Megaphone, HelpCircle, RotateCcw } from 'lucide-react'
+import { Loader2, Copy, Check, Users, FileText, Share2, UserCheck, UserX, Megaphone, HelpCircle, RotateCcw, Link2 } from 'lucide-react'
 import ProgressBar from '../components/ProgressBar'
 import FolderUpload from '../components/FolderUpload'
 import FolderTree from '../components/FolderTree'
 import AnnouncementsPanel from '../components/AnnouncementsPanel'
 import DoubtsPanel from '../components/DoubtsPanel'
-import { getClassroom, getNodes, getClassroomStudents, getClassroomPending, approveRequest, rejectRequest, updateProgress, deleteNode, renameNode, uploadFolder, resetStudentProgress } from '../api'
+import AddLinkModal from '../components/AddLinkModal'
+import ContentViewer from '../components/ContentViewer'
+import { getClassroom, getNodes, getClassroomStudents, getClassroomPending, approveRequest, rejectRequest, updateProgress, deleteNode, renameNode, uploadFolder, resetStudentProgress, createLinkNode } from '../api'
 import './AdminWorkspace.css'
 
 export default function AdminWorkspace() {
@@ -19,6 +21,9 @@ export default function AdminWorkspace() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('content')
   const [copied, setCopied] = useState(false)
+  const [linkModalOpen, setLinkModalOpen] = useState(false)
+  const [linkParentId, setLinkParentId] = useState(null)
+  const [selectedNode, setSelectedNode] = useState(null)
 
   const loadData = useCallback(async () => {
     try {
@@ -49,11 +54,19 @@ export default function AdminWorkspace() {
 
   async function handleToggle(nodeId, completed) {
     setNodes((prev) => prev.map((n) => (n.id === nodeId ? { ...n, completed } : n)))
+    setSelectedNode((prev) => prev?.id === nodeId ? { ...prev, completed } : prev)
     try {
       await updateProgress(nodeId, completed)
+      const updatedClassroom = await getClassroom(id)
+      setClassroom(updatedClassroom)
     } catch {
       setNodes((prev) => prev.map((n) => (n.id === nodeId ? { ...n, completed: !completed } : n)))
+      setSelectedNode((prev) => prev?.id === nodeId ? { ...prev, completed: !completed } : prev)
     }
+  }
+
+  function handlePreview(node) {
+    setSelectedNode(node)
   }
 
   async function handleDeleteNode(nodeId) {
@@ -80,6 +93,21 @@ export default function AdminWorkspace() {
       await loadData()
     } catch (err) {
       console.error('Failed to upload to folder:', err)
+    }
+  }
+
+  function openLinkModal(parentId = null) {
+    setLinkParentId(parentId)
+    setLinkModalOpen(true)
+  }
+
+  async function handleAddLink(name, url) {
+    try {
+      await createLinkNode(id, linkParentId, name, url)
+      await loadData()
+    } catch (err) {
+      console.error('Failed to add link:', err)
+      throw err
     }
   }
 
@@ -184,19 +212,38 @@ export default function AdminWorkspace() {
               <section className="detail-section">
                 <h2 className="section-title">Upload Content</h2>
                 <FolderUpload classroomId={id} onUploadComplete={loadData} />
+                <button className="btn btn-secondary btn-sm" style={{ marginTop: '1rem' }} onClick={() => openLinkModal(null)}>
+                  <Link2 size={14} /> Add Link to Root
+                </button>
               </section>
               <section className="detail-section">
                 <h2 className="section-title">Course Tree</h2>
-                <div className="tree-container card">
-                  <FolderTree
-                    nodes={nodes}
-                    onToggleLesson={handleToggle}
-                    isAdmin={true}
-                    onDeleteNode={handleDeleteNode}
-                    onRenameNode={handleRenameNode}
-                    onUploadToFolder={handleUploadToFolder}
-                    classroomId={id}
-                  />
+                <div className={`admin-workspace-grid ${selectedNode ? 'has-viewer' : ''}`}>
+                  <div className="admin-sidebar">
+                    <div className="tree-container card">
+                      <FolderTree
+                        nodes={nodes}
+                        onToggleLesson={handleToggle}
+                        onPreview={handlePreview}
+                        isAdmin={true}
+                        onDeleteNode={handleDeleteNode}
+                        onRenameNode={handleRenameNode}
+                        onUploadToFolder={handleUploadToFolder}
+                        onAddLinkToFolder={openLinkModal}
+                        classroomId={id}
+                      />
+                    </div>
+                  </div>
+                  {selectedNode && (
+                    <div className="admin-viewer animate-fade-in">
+                      <ContentViewer
+                        node={selectedNode}
+                        onClose={() => setSelectedNode(null)}
+                        onAutoComplete={(nodeId) => handleToggle(nodeId, true)}
+                        classroomId={id}
+                      />
+                    </div>
+                  )}
                 </div>
               </section>
             </div>
@@ -298,6 +345,11 @@ export default function AdminWorkspace() {
           )}
         </div>
       </div>
+      <AddLinkModal 
+        isOpen={linkModalOpen} 
+        onClose={() => setLinkModalOpen(false)} 
+        onSubmit={handleAddLink} 
+      />
     </main>
   )
 }

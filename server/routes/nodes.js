@@ -59,6 +59,39 @@ router.get('/', async (req, res) => {
   }
 });
 
+// POST /api/nodes/link — create a link node (owner/teacher only)
+router.post('/link', async (req, res) => {
+  try {
+    const { classroomId, parentId, name, url } = req.body;
+
+    if (!classroomId || !name || !url) {
+      return res.status(400).json({ error: 'classroomId, name, and url are required' });
+    }
+
+    // Verify user is teacher/owner for this classroom
+    const [membership] = await pool.execute(
+      "SELECT id FROM memberships WHERE user_id = ? AND classroom_id = ? AND role = 'teacher' AND status = 'approved'",
+      [req.user.id, classroomId]
+    );
+
+    const [classroom] = await pool.execute('SELECT owner_id FROM classrooms WHERE id = ?', [classroomId]);
+
+    if (membership.length === 0 && (!classroom[0] || classroom[0].owner_id !== req.user.id)) {
+      return res.status(403).json({ error: 'Only teachers can add links' });
+    }
+
+    const [result] = await pool.execute(
+      'INSERT INTO nodes (classroom_id, parent_id, name, type, resource_url) VALUES (?, ?, ?, ?, ?)',
+      [classroomId, parentId || null, name.trim(), 'link', url.trim()]
+    );
+
+    res.status(201).json({ id: result.insertId, message: 'Link node created' });
+  } catch (err) {
+    console.error('Error creating link node:', err);
+    res.status(500).json({ error: 'Failed to create link node' });
+  }
+});
+
 // PUT /api/nodes/:id/progress — toggle completion for current user
 router.put('/:id/progress', async (req, res) => {
   try {

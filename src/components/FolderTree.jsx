@@ -1,9 +1,9 @@
 import { useState, useRef } from 'react'
-import { ChevronRight, Folder, FolderOpen, Trash2, Pencil, FolderPlus, X, Check } from 'lucide-react'
+import { ChevronRight, Folder, FolderOpen, Trash2, Pencil, FolderPlus, X, Check, Link2 } from 'lucide-react'
 import LessonItem from './LessonItem'
 import './FolderTree.css'
 
-export default function FolderTree({ nodes, onToggleLesson, onPreview, isAdmin = false, onDeleteNode, onRenameNode, onUploadToFolder, classroomId }) {
+export default function FolderTree({ nodes, onToggleLesson, onPreview, isAdmin = false, onDeleteNode, onRenameNode, onUploadToFolder, onAddLinkToFolder, classroomId }) {
   const tree = buildTree(nodes)
 
   return (
@@ -24,6 +24,7 @@ export default function FolderTree({ nodes, onToggleLesson, onPreview, isAdmin =
             onDeleteNode={onDeleteNode}
             onRenameNode={onRenameNode}
             onUploadToFolder={onUploadToFolder}
+            onAddLinkToFolder={onAddLinkToFolder}
             classroomId={classroomId}
           />
         ))
@@ -32,7 +33,7 @@ export default function FolderTree({ nodes, onToggleLesson, onPreview, isAdmin =
   )
 }
 
-function TreeNode({ node, onToggleLesson, onPreview, depth, isAdmin, onDeleteNode, onRenameNode, onUploadToFolder, classroomId }) {
+function TreeNode({ node, onToggleLesson, onPreview, depth, isAdmin, onDeleteNode, onRenameNode, onUploadToFolder, onAddLinkToFolder, classroomId }) {
   const [isOpen, setIsOpen] = useState(depth < 2)
   const [isRenaming, setIsRenaming] = useState(false)
   const [newName, setNewName] = useState(node.name)
@@ -80,7 +81,7 @@ function TreeNode({ node, onToggleLesson, onPreview, depth, isAdmin, onDeleteNod
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  if (node.type === 'file') {
+  if (node.type === 'file' || node.type === 'link') {
     return (
       <div style={{ paddingLeft: `${depth * 20}px` }} className="tree-file-row">
         <LessonItem node={node} onToggle={onToggleLesson} onPreview={onPreview} isAdmin={isAdmin} />
@@ -166,6 +167,9 @@ function TreeNode({ node, onToggleLesson, onPreview, depth, isAdmin, onDeleteNod
             <button className="tree-action-btn" onClick={handleUploadToThisFolder} title="Upload to this folder">
               <FolderPlus size={13} />
             </button>
+            <button className="tree-action-btn" onClick={(e) => { e.stopPropagation(); onAddLinkToFolder(node.id) }} title="Add link to this folder">
+              <Link2 size={13} />
+            </button>
             <button className="tree-action-btn" onClick={(e) => { e.stopPropagation(); setIsRenaming(true); setNewName(node.name) }} title="Rename">
               <Pencil size={12} />
             </button>
@@ -201,6 +205,7 @@ function TreeNode({ node, onToggleLesson, onPreview, depth, isAdmin, onDeleteNod
               onDeleteNode={onDeleteNode}
               onRenameNode={onRenameNode}
               onUploadToFolder={onUploadToFolder}
+              onAddLinkToFolder={onAddLinkToFolder}
               classroomId={classroomId}
             />
           ))}
@@ -244,11 +249,11 @@ function buildTree(nodes) {
 }
 
 function countCompleted(node) {
-  if (node.type === 'file') return node.completed ? 1 : 0
+  if (node.type === 'file' || node.type === 'link') return node.completed ? 1 : 0
   return (node.children || []).reduce((sum, child) => sum + countCompleted(child), 0)
 }
 
 function countTotal(node) {
-  if (node.type === 'file') return 1
+  if (node.type === 'file' || node.type === 'link') return 1
   return (node.children || []).reduce((sum, child) => sum + countTotal(child), 0)
 }

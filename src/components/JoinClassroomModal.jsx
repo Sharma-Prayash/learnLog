@@ -56,7 +56,7 @@ export default function JoinClassroomModal({ isOpen, onClose, onSubmit }) {
                 placeholder="e.g. XJ92LF"
                 autoFocus
                 required
-                maxLength={8}
+                maxLength={12}
                 style={{ paddingLeft: '40px', textTransform: 'uppercase', letterSpacing: '0.15em', fontWeight: 700 }}
               />
             </div>

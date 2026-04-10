@@ -27,6 +27,7 @@ export default function LessonItem({ node, onToggle, onPreview, isAdmin = false 
     if (canPreview && onPreview) {
       // Open in-app preview
       onPreview(node)
+      
       if (!node.completed && contentType !== 'video') {
         // Auto-mark non-video files as completed on open (videos use 70% threshold)
         onToggle(node.id, true)

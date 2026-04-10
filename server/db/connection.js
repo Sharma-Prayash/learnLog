@@ -195,6 +195,9 @@ async function migrateNodesTable(connection) {
       FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
     `);
   }
+
+  // Update type ENUM to include 'link'
+  await connection.query("ALTER TABLE nodes MODIFY COLUMN type ENUM('folder', 'file', 'link') NOT NULL");
 }
 
 async function migrateLegacyCourseNodes(connection) {

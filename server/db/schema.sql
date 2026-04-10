@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS nodes (
   id INT AUTO_INCREMENT PRIMARY KEY,
   classroom_id INT NOT NULL,
   name VARCHAR(255) NOT NULL,
-  type ENUM('folder', 'file') NOT NULL,
+  type ENUM('folder', 'file', 'link') NOT NULL,
   parent_id INT DEFAULT NULL,
   resource_url TEXT DEFAULT NULL,
   FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE,

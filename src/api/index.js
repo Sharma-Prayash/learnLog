@@ -107,6 +107,11 @@ export async function renameNode(id, name) {
   return data;
 }
 
+export async function createLinkNode(classroomId, parentId, name, url) {
+  const { data } = await api.post('/nodes/link', { classroomId, parentId, name, url });
+  return data;
+}
+
 // ── Upload ──
 
 export async function uploadFolder(classroomId, files, paths, parentId = null) {
